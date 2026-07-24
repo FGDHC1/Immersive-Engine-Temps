@@ -27,7 +27,7 @@ Realistic warm-up instead of an instantly "ready" engine:
 
 **Phase 3 – Optional: in-game integration**
 - Possible later hook into Redscript/3D HUD, if desired
-- Own, self-made assets (no third-party meshes/graphics)
+- Engine readiness value applies to the Vehicle itself with less power if not on operating temperature
 
 ## License
 
