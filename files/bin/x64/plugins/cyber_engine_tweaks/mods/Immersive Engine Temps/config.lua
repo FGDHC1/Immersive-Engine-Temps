@@ -22,4 +22,6 @@ return {
     ambient_low_c = 15,
     ambient_peak_hour = 14,
     ambient_peak_c = 36,
+
+    timeskipDetectionThreshold = 0.1
 }

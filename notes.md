@@ -2,14 +2,19 @@
 
 
 ## Weitere Ideen
-- Engine is warm if vehicle is called
-- Temperature Persistence over game restart 
-- Timeskip detection
+- Temperature Persistence over game restart
 - Cars with a gearbox that is always high reving, are likely to have higher Temperatures. I have to investigate that a little further
 - Ambient temperature should influence cooling (its minimal but i thik its a nice detail)
 - Optimising the unmounted logic
 - Optimising the ambient temperature logic
 - Maybe a clean up logic, that cleans up the vehicles that returned to ambient temperature
+#### Erledigt
+- ~~Timeskip detection~~
+
+
+#### Nicht gemacht
+- ~~Engine is warm if vehicle is called - I think its not rlly possible for me, i have to get more knoledge over the vehicle system.~~
+
 
 ## Zusammengefasste Werte & Formeln (This is a draft of the Formulas and Logics)
 

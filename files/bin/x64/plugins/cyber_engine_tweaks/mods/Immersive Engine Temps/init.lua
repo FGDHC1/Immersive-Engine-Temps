@@ -26,6 +26,8 @@ local LIVE = { rpm=nil} -- Collectionpoint for async data
 
 local isOverlayVisible = false
 
+local lastHour = nil
+
 registerForEvent("onOverlayOpen", function()
     isOverlayVisible = true
 end)
@@ -52,6 +54,14 @@ registerForEvent("onUpdate", function(dt)
     if not player then return end
     
     local veh = player:GetMountedVehicle()
+
+    if lastHour then
+        local skippedSeconds = TEMP.detectTimeskip(lastHour, hour, CONFIG)
+        if skippedSeconds then
+            STATE.tickAllUnmounted(skippedSeconds, CONFIG, ambientNow)
+        end
+    end
+    lastHour = hour
 
     if not veh then
         DEBUG.mounted = false

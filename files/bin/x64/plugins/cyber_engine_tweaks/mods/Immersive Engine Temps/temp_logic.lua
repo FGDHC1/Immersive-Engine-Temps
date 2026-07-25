@@ -83,8 +83,8 @@ function T.tickOil(v, kmh, rpm, dt, CFG)
 end
 
 function T.tickUnmounted(v, ambientNow, dt, CFG)
-    v.coolant_temp = v.coolant_temp + (ambientNow - v.coolant_temp) * CFG.k_unmounted * dt
-    v.oil_temp = v.oil_temp + (ambientNow - v.oil_temp) * CFG.k_unmounted * dt
+    v.coolant_temp = v.coolant_temp + (ambientNow - v.coolant_temp) * math.exp(-CFG.k_unmounted * dt)
+    v.oil_temp = v.oil_temp + (ambientNow - v.oil_temp) * math.exp(-CFG.k_unmounted * dt)
 end
 
 local function easeInOut(progress)
@@ -118,4 +118,11 @@ function T.computeEngineReadyness(v, ambientNow, CFG)
     return clamp01(coolantReady * 0.8 + oilReady * 0.2)
 end
 
+function T.detectTimeskip(lastHour, currentHour, CFG)
+    local difference = (currentHour - lastHour) % 24
+    if difference > CFG.timeskipDetectionThreshold then
+        return difference * 3600
+    end
+    return nil
+end
 return T
