@@ -83,8 +83,8 @@ function T.tickOil(v, kmh, rpm, dt, CFG)
 end
 
 function T.tickUnmounted(v, ambientNow, dt, CFG)
-    v.coolant_temp = v.coolant_temp + (ambientNow - v.coolant_temp) * math.exp(-CFG.k_unmounted * dt)
-    v.oil_temp = v.oil_temp + (ambientNow - v.oil_temp) * math.exp(-CFG.k_unmounted * dt)
+    v.coolant_temp = ambientNow + (v.coolant_temp - ambientNow) * math.exp(-CFG.k_unmounted * dt)
+    v.oil_temp = ambientNow + (v.oil_temp - ambientNow) * math.exp(-CFG.k_unmounted * dt)
 end
 
 local function easeInOut(progress)
