@@ -28,6 +28,17 @@ local isOverlayVisible = false
 
 local lastHour = nil
 
+local sysCache = nil
+
+local function getSystem()
+    if sysCache then return sysCache end
+    local c = Game.GetScriptableSystemsContainer()
+    if not c then return nil end
+    sysCache = c:Get("ImmersiveEngineTemps.EngineTempSystem")
+    return sysCache
+end
+
+
 registerForEvent("onOverlayOpen", function()
     isOverlayVisible = true
 end)
@@ -51,7 +62,10 @@ registerForEvent("onUpdate", function(dt)
     local hour = Game.GetTimeSystem():GetGameTime():Hours()
     local ambientNow = TEMP.computeAmbient(hour, CONFIG)
 
-    if not player then return end
+    if not player then 
+        sysCache = nil
+        return 
+    end
     
     local veh = player:GetMountedVehicle()
 
@@ -66,6 +80,8 @@ registerForEvent("onUpdate", function(dt)
     if not veh then
         DEBUG.mounted = false
         STATE.tickAllUnmounted(dt, CONFIG, ambientNow)
+        local sys = getSystem()
+        if sys then sys:HideHUD() end
         return
     end
 
@@ -106,6 +122,11 @@ registerForEvent("onUpdate", function(dt)
     DEBUG.oil_delta = TEMP.DEBUG.oil_delta
     DEBUG.max_rpm = v.max_rpm
     DEBUG.engineReadyness = engineReadyness
+
+    local sys = getSystem()
+    if sys then
+        sys:PushValues(math.floor(rpm), v.coolant_temp, v.oil_temp)
+    end
 end)
 
 

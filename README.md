@@ -16,18 +16,19 @@ Realistic warm-up instead of an instantly "ready" engine:
 
 ## Planned roadmap
 
-**Phase 1 – Backend & simulation validation** *(currently here)*
+**Phase 1 – Logic & debug output** *(currently here)*
 - Pure logic in CET/Lua: temperature formulas, per-vehicle persistence, cooldown timer
 - Values shown as plain text in the CET overlay first, to check the behavior feels right
 - No Redscript, no UI polish needed yet
 
-**Phase 2 – Custom dashboard/UI**
-- Movable canvas display (ImGui, freely positionable)
-- Working gauges/dashes for oil and coolant temperature
+**Phase 2 – 2D gauge**
+- Persistent in-game HUD (not tied to the CET overlay), drawn with ImGui
+- Circular gauges for coolant and oil temperature
+- Still no Redscript
 
-**Phase 3 – Optional: in-game integration**
-- Possible later hook into Redscript/3D HUD, if desired
-- Engine readiness value applies to the Vehicle itself with less power if not on operating temperature
+**Phase 3 – 3D gauge**
+- In-game 3D display via Redscript
+- Engine readiness value affects the vehicle itself (less power until up to operating temperature)
 
 ## License
 
