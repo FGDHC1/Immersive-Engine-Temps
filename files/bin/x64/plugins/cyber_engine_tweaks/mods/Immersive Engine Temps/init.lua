@@ -59,8 +59,9 @@ end)
 registerForEvent("onUpdate", function(dt)
     local player = Game.GetPlayer()
 
-    local hour = Game.GetTimeSystem():GetGameTime():Hours()
-    local ambientNow = TEMP.computeAmbient(hour, CONFIG)
+    local gTime = Game.GetTimeSystem():GetGameTime()
+    local nowSec = gTime:Hours() * 3600 + gTime:Minutes() * 60 + gTime:Seconds() 
+    local ambientNow = TEMP.computeAmbient(nowSec / 3600.0, CONFIG)
 
     if not player then 
         sysCache = nil

@@ -118,10 +118,10 @@ function T.computeEngineReadyness(v, ambientNow, CFG)
     return clamp01(coolantReady * 0.8 + oilReady * 0.2)
 end
 
-function T.detectTimeskip(lastHour, currentHour, CFG)
-    local difference = (currentHour - lastHour) % 24
-    if difference > CFG.timeskipDetectionThreshold then
-        return difference * 3600
+function T.detectTimeskip(lastSec, nowSec, CFG)
+    local difference = (nowSec - lastSec) % 86400
+    if difference > CFG.timeskipThreshold_s then
+        return difference
     end
     return nil
 end

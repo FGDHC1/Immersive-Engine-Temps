@@ -21,9 +21,11 @@ function S.getOrCreate(vehID, ambientNow, CFG)
     return v
 end
 
-function S.tickAllUnmounted(dt, CFG, ambientNow)
+function S.tickAllUnmounted(dt, CFG, ambientNow, skipID)
     for vehID, v in pairs(vehicles) do
-        TEMP.tickUnmounted(v, ambientNow, dt, CFG)
+        if vehID ~= skipID then
+            TEMP.tickUnmounted(v, ambientNow, dt, CFG)
+        end
     end
 end
 -- The following is not relevant ill maybe implement it fully sometimes
