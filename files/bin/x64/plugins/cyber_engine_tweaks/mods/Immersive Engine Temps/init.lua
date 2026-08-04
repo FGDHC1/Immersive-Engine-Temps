@@ -26,7 +26,7 @@ local LIVE = { rpm=nil} -- Collectionpoint for async data
 
 local isOverlayVisible = false
 
-local lastHour = nil
+local lastSec = nil
 
 local sysCache = nil
 
@@ -69,18 +69,20 @@ registerForEvent("onUpdate", function(dt)
     end
     
     local veh = player:GetMountedVehicle()
+    local skipID = nil
+    if veh then skipID = tostring(veh:GetEntityID().hash) end
 
-    if lastHour then
-        local skippedSeconds = TEMP.detectTimeskip(lastHour, hour, CONFIG)
+    if lastSec then
+        local skippedSeconds = TEMP.detectTimeskip(lastSec, nowSec, CONFIG)
         if skippedSeconds then
-            STATE.tickAllUnmounted(skippedSeconds, CONFIG, ambientNow)
+            STATE.tickAllUnmounted(skippedSeconds, CONFIG, ambientNow, skipID)
         end
     end
-    lastHour = hour
+    lastSec = nowSec
 
     if not veh then
         DEBUG.mounted = false
-        STATE.tickAllUnmounted(dt, CONFIG, ambientNow)
+        STATE.tickAllUnmounted(dt, CONFIG, ambientNow, skipID)
         local sys = getSystem()
         if sys then sys:HideHUD() end
         return
@@ -109,7 +111,7 @@ registerForEvent("onUpdate", function(dt)
     DEBUG.mounted = true
     DEBUG.kmh = kmh
     DEBUG.rpm = rpm
-    DEBUG.hour = hour
+    DEBUG.hour = nowSec / 3600.0
     DEBUG.ambientNow = ambientNow
     DEBUG.vehID = vehID
     DEBUG.coolant_temp = v.coolant_temp

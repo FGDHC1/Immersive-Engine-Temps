@@ -10,6 +10,7 @@
 - Maybe a clean up logic, that cleans up the vehicles that returned to ambient temperature
 - Implement mod config edit, maybe via Native Settings UI
 - Implement HUD config edit
+- Implement in 2d hud that it dissapears when in wheapon wheel
 #### Erledigt
 - ~~Timeskip detection~~
 
