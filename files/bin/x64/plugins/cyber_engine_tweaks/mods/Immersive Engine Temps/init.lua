@@ -1,6 +1,7 @@
-local CONFIG = require("config")
 local STATE = require("vehicle_state")
 local TEMP = require("temp_logic")
+local SETTINGS = require("settings")
+local CONFIG = SETTINGS.values
 -- I Just want to see every value, to see if everything is correct
 local DEBUG = {
     mounted = false,
@@ -30,6 +31,11 @@ local lastSec = nil
 
 local sysCache = nil
 
+local vehKey = nil
+local vehName = nil
+
+local selectedKey = nil
+
 local function getSystem()
     if sysCache then return sysCache end
     local c = Game.GetScriptableSystemsContainer()
@@ -38,6 +44,13 @@ local function getSystem()
     return sysCache
 end
 
+local function getVehKey(veh)
+    local ok, rec = pcall(function() return veh:GetRecordID() end)
+    if not ok or not rec then return nil end
+    local key = rec.value
+    if key == nil or key == "" then key = tostring(rec) end
+    return key
+end
 
 registerForEvent("onOverlayOpen", function()
     isOverlayVisible = true
@@ -47,7 +60,12 @@ registerForEvent("onOverlayClose", function()
     isOverlayVisible = false
 end)
 
+registerForEvent("onShutdown", function() 
+    SETTINGS.write() 
+end)
+
 registerForEvent("onInit", function()
+    SETTINGS.load()
     Observe("CarComponent",  "OnVehicleRPMChange", function(self, rpm)
         -- print("[Immersive Engine Temps] RPM event fired, rpm=" .. tostring(rpm))
         if not self or not self.mounted then return end -- Is it the player vehicle?
@@ -85,6 +103,8 @@ registerForEvent("onUpdate", function(dt)
         STATE.tickAllUnmounted(dt, CONFIG, ambientNow, skipID)
         local sys = getSystem()
         if sys then sys:HideHUD() end
+        vehKey = nil
+        SETTINGS.resolve(nil)
         return
     end
 
@@ -99,6 +119,12 @@ registerForEvent("onUpdate", function(dt)
     local rpm = LIVE.rpm or 0
 
     local vehID = tostring(veh:GetEntityID().hash)
+    local key = getVehKey(veh)
+    if key ~= vehKey then
+        vehKey = key
+        vehName = veh:GetDisplayName()
+        SETTINGS.resolve(vehKey)
+    end
 
     local v = STATE.getOrCreate(vehID, ambientNow, CONFIG)
 
@@ -114,6 +140,7 @@ registerForEvent("onUpdate", function(dt)
     DEBUG.hour = nowSec / 3600.0
     DEBUG.ambientNow = ambientNow
     DEBUG.vehID = vehID
+    DEBUG.vehKey = vehKey
     DEBUG.coolant_temp = v.coolant_temp
     DEBUG.coolant_heat = TEMP.DEBUG.coolant_heat
     DEBUG.coolant_cool = TEMP.DEBUG.coolant_cool
@@ -136,31 +163,94 @@ end)
 registerForEvent("onDraw", function()
     if not isOverlayVisible then return end
     ImGui.Begin("Engine Temp Sim")
-    if DEBUG.mounted then
-        ImGui.Text(("--- Raw Data ---"))
-        ImGui.Text(("Vehicle ID: %s"):format(tostring(DEBUG.vehID)))
-        ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
-        ImGui.Text(("RPM: %.0f"):format(DEBUG.rpm))
-        ImGui.Text(("Game hour: %.2f"):format(DEBUG.hour))
+    if ImGui.BeginTabBar("##maintabs") then
+    
+        if ImGui.BeginTabItem("Debug") then
+            if DEBUG.mounted then
+                if ImGui.CollapsingHeader("--- Raw Data ---") then
+                    ImGui.Text(("Record: %s"):format(tostring(DEBUG.vehKey)))
+                    ImGui.Text(("Vehicle ID: %s"):format(tostring(DEBUG.vehID)))
+                    ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
+                    ImGui.Text(("RPM: %.0f"):format(DEBUG.rpm))
+                    ImGui.Text(("Game hour: %.2f"):format(DEBUG.hour))
+                end
 
-        ImGui.Separator()
-        ImGui.Text(("--- Derived Values ---"))
-        ImGui.Text(("Ambient now: %.1f C"):format(DEBUG.ambientNow))
-        ImGui.Text(("Max RPM learned: %.0f"):format(DEBUG.max_rpm))
-        ImGui.Text(("Coolant Heat: %.1f"):format(DEBUG.coolant_heat))
-        ImGui.Text(("Coolant Cool: %.1f"):format(DEBUG.coolant_cool))
-        ImGui.Text(("Coolant Target: %.1f"):format(DEBUG.coolant_target))
-        ImGui.Text(("Coolant Delta: %.1f"):format(DEBUG.coolant_delta))
-        ImGui.Text(("Oil Heat: %.1f"):format(DEBUG.oil_heat))
-        ImGui.Text(("Oil Target: %.1f"):format(DEBUG.oil_target))
-        ImGui.Text(("Oil Delta: %.1f"):format(DEBUG.oil_delta))
+                ImGui.Separator()
+                if ImGui.CollapsingHeader(("--- Derived Values ---")) then
+                    ImGui.Text(("Ambient now: %.1f C"):format(DEBUG.ambientNow))
+                    ImGui.Text(("Max RPM learned: %.0f"):format(DEBUG.max_rpm))
+                    ImGui.Text(("Coolant Heat: %.1f"):format(DEBUG.coolant_heat))
+                    ImGui.Text(("Coolant Cool: %.1f"):format(DEBUG.coolant_cool))
+                    ImGui.Text(("Coolant Target: %.1f"):format(DEBUG.coolant_target))
+                    ImGui.Text(("Coolant Delta: %.1f"):format(DEBUG.coolant_delta))
+                    ImGui.Text(("Oil Heat: %.1f"):format(DEBUG.oil_heat))
+                    ImGui.Text(("Oil Target: %.1f"):format(DEBUG.oil_target))
+                    ImGui.Text(("Oil Delta: %.1f"):format(DEBUG.oil_delta))
+                end
 
-        ImGui.Separator()
-        ImGui.Text(("--- Simulation ---"))
-        ImGui.Text(("Coolant temp: %.1f C"):format(DEBUG.coolant_temp))
-        ImGui.Text(("Oil temp: %.1f C"):format(DEBUG.oil_temp))
-        ImGui.Text(("Engine Ready: %.0f %%"):format(DEBUG.engineReadyness * 100))
+                ImGui.Separator()
+                if ImGui.CollapsingHeader(("--- Simulation ---")) then
+                    ImGui.Text(("Coolant temp: %.1f C"):format(DEBUG.coolant_temp))
+                    ImGui.Text(("Oil temp: %.1f C"):format(DEBUG.oil_temp))
+                    ImGui.Text(("Engine Ready: %.0f %%"):format(DEBUG.engineReadyness * 100))
+                end
+            else
+                ImGui.Text("Not mounted.")
+            end
+            ImGui.EndTabItem()
+        end
 
+        if ImGui.BeginTabItem("Settings") then
+            if DEBUG.mounted then
+                local used
+                local changed = false
+
+                CONFIG.coolant_setpoint_c, used = ImGui.SliderFloat("Setpoint C", CONFIG.coolant_setpoint_c, 60, 120)
+                changed = changed or used
+
+                CONFIG.k_coolant, used = ImGui.SliderFloat("k coolant", CONFIG.k_coolant, 0.001, 0.100)
+                changed = changed or used
+
+                CONFIG.coolant_heat_max_c, used = ImGui.SliderFloat("Heat max C", CONFIG.coolant_heat_max_c, 0, 60)
+                changed = changed or used
+
+                CONFIG.coolant_cool_max_c, used = ImGui.SliderFloat("Cool max C", CONFIG.coolant_cool_max_c, 0, 40)
+                changed = changed or used
+
+                CONFIG.k_oil, used = ImGui.SliderFloat("k oil", CONFIG.k_oil, 0.001, 0.100)
+                changed = changed or used
+
+                CONFIG.oil_offset_c, used = ImGui.SliderFloat("Oil offset C", CONFIG.oil_offset_c, 0, 40)
+                changed = changed or used
+
+                ImGui.Separator()
+
+                if ImGui.Button("Save Global") then
+                    SETTINGS.saveGlobal()
+                end
+                ImGui.SameLine()
+                if ImGui.Button("Save To this Car") then
+                    SETTINGS.saveVehicle(vehKey, vehName)
+                end
+                ImGui.SameLine()
+                if ImGui.Button("Reset Car Setting") then
+                    SETTINGS.clearVehicle(vehKey)
+                end
+
+                if changed then SETTINGS.dirty = true end
+
+                else
+                    ImGui.Text("Not mounted")
+                end
+                ImGui.EndTabItem()
+                if SETTINGS.dirty then
+                    ImGui.Text("Unsaved changes")
+                else
+                    ImGui.Text("Saved")
+                end 
+            end
+        end
+        ImGui.EndTabBar()
     else
         ImGui.Text("Not mounted.")
     end
