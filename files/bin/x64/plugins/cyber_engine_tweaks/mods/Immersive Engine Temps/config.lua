@@ -23,5 +23,13 @@ return {
     ambient_peak_hour = 14,
     ambient_peak_c = 36,
 
-    timeskipThreshold_s = 60
+    timeskipThreshold_s = 60,
+
+    hud2d_enabled = true,
+    hud2d_x = -1350.0,
+    hud2d_y = -333.0,
+    hud2d_scale = 1.0,
+    hud2d_opacity = 1.0,
+    hud2d_unit = "C"
+
 }

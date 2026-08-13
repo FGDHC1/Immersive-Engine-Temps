@@ -9,6 +9,15 @@ local S = {
 
 local SAVE_FILE = "settings.json"
 
+local GLOBAL_ONLY = {
+    hud2d_enabled = true,
+    hud2d_x       = true,
+    hud2d_y       = true,
+    hud2d_scale   = true,
+    hud2d_opacity = true,
+    hud2d_unit    = true,
+}
+
 local function apply(target, src)
     if type(src) ~= "table" then return end
     for k, v in pairs(src) do
@@ -64,11 +73,13 @@ function S.write()
     S.dirty = false
 end
 
-local function diff(base)
+local function diff(base, skipGlobalOnly)
     local out = {}
     for k in pairs(DEFAULTS) do
-        if S.values[k] ~= base[k] then
-            out[k] = S.values[k]
+        if not (skipGlobalOnly and GLOBAL_ONLY[k]) then
+            if S.values[k] ~= base[k] then
+                out[k] = S.values[k]
+            end
         end
     end
     return out
@@ -86,7 +97,7 @@ function S.saveVehicle(key, name)
     for k, v in pairs(DEFAULTS) do base[k] = v end
     apply(base, S.global)
 
-    S.vehicles[key] = { name = name or key, values = diff(base) }
+    S.vehicles[key] = { name = name or key, values = diff(base, true), }
     S.write()
 end
 
@@ -101,6 +112,13 @@ function S.import(key)
     local entry = S.vehicles[key]
     if not entry then return end
     apply(S.values, entry.values)
+    S.dirty = true
+end
+
+function S.resetHud()
+    for k in pairs(GLOBAL_ONLY) do
+        S.values[k] = DEFAULTS[k]
+    end
     S.dirty = true
 end
 

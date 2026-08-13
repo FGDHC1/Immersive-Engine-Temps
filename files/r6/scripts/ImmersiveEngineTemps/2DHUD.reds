@@ -2,6 +2,10 @@ module ImmersiveEngineTemps
 
 public class EngineTempSystem extends ScriptableSystem {
   private let hud: ref<EngineHUD>;
+  private let cfgX: Float = 0.0;
+  private let cfgY: Float = 0.0;
+  private let cfgScale: Float = 1.0;
+  private let cfgOpacity: Float = 1.0;
 
   private func EnsureHUD() -> Bool {
     if IsDefined(this.hud) { return true; }
@@ -28,6 +32,18 @@ public class EngineTempSystem extends ScriptableSystem {
       this.hud.SetHUDVisible(false);
     }
   }
+  private let cfgUnitF: Bool = false;
+
+  public func PushConfig(x: Float, y: Float, scale: Float, opacity: Float, unitF: Bool) -> Void {
+    this.cfgX = x;
+    this.cfgY = y;
+    this.cfgScale = scale;
+    this.cfgOpacity = opacity;
+    this.cfgUnitF = unitF;
+    if this.EnsureHUD() {
+      this.hud.ApplyConfig(x, y, scale, opacity, unitF);
+    }
+  }
 }
 
 public class EngineHUD extends IScriptable {
@@ -39,6 +55,16 @@ public class EngineHUD extends IScriptable {
   private let needle: wref<inkImage>;
   private let coolSegs: array<wref<inkImage>>;
   private let oilSegs: array<wref<inkImage>>;
+  private let useF: Bool = false;
+
+  public func ApplyConfig(x: Float, y: Float, scale: Float, opacity: Float, unitF: Bool) -> Void {
+    this.useF = unitF;
+    if IsDefined(this.root) {
+      this.root.SetTranslation(Vector2(x, -y));
+      this.root.SetScale(Vector2(scale, scale));
+      this.root.SetOpacity(opacity);
+    }
+  }
 
   public func SetHUDVisible(visible: Bool) -> Void {
     if IsDefined(this.root) {
@@ -78,9 +104,9 @@ public class EngineHUD extends IScriptable {
 
     let root: ref<inkCanvas> = new inkCanvas();
     root.Reparent(vwin, -1);
-    root.SetAnchor(inkEAnchor.BottomLeft);
-    root.SetAnchorPoint(Vector2(0.0, 1.0));
-    root.SetMargin(inkMargin(40.0, 0.0, 0.0, 190.0));
+    root.SetAnchor(inkEAnchor.Centered);
+    root.SetAnchorPoint(Vector2(0.5, 0.5));
+    root.SetMargin(inkMargin(0.0, 0.0, 0.0, 0.0));
     root.SetSize(Vector2(600.0, 400.0));
     root.SetVisible(true);
     root.SetOpacity(1.0);
@@ -198,8 +224,18 @@ public class EngineHUD extends IScriptable {
 
   public func UpdateValues(rpm: Int32, coolant: Float, oil: Float) -> Void {
     this.rpmText.SetText("RPM: " + IntToString(rpm));
-    this.coolantText.SetText("Cool: " + FloatToStringPrec(coolant, 0) + "°");
-    this.oilText.SetText("Oil: " + FloatToStringPrec(oil, 0) + "°");
+
+    let cShown: Float = coolant;
+    let oShown: Float = oil;
+    let suffix: String = "°C";
+    if this.useF {
+      cShown = coolant * 1.8 + 32.0;
+      oShown = oil * 1.8 + 32.0;
+      suffix = "°F";
+    }
+
+    this.coolantText.SetText("Cool: " + FloatToStringPrec(cShown, 0) + suffix);
+    this.oilText.SetText("Oil: " + FloatToStringPrec(oShown, 0) + suffix);
 
     let frac: Float = Cast<Float>(rpm) / 8000.0;
     if frac > 1.0 { frac = 1.0; }

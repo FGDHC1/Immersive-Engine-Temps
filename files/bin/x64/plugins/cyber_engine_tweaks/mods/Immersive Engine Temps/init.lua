@@ -36,6 +36,8 @@ local vehName = nil
 
 local selectedKey = nil
 
+local hudDirty = true
+
 local function getSystem()
     if sysCache then return sysCache end
     local c = Game.GetScriptableSystemsContainer()
@@ -83,6 +85,7 @@ registerForEvent("onUpdate", function(dt)
 
     if not player then 
         sysCache = nil
+        hudDirty = true
         return 
     end
     
@@ -155,7 +158,15 @@ registerForEvent("onUpdate", function(dt)
 
     local sys = getSystem()
     if sys then
-        sys:PushValues(math.floor(rpm), v.coolant_temp, v.oil_temp)
+        if CONFIG.hud2d_enabled then
+            if hudDirty then
+                sys:PushConfig(CONFIG.hud2d_x, CONFIG.hud2d_y, CONFIG.hud2d_scale, CONFIG.hud2d_opacity, CONFIG.hud2d_unit == "F")
+                hudDirty = false
+            end
+            sys:PushValues(math.floor(rpm), v.coolant_temp, v.oil_temp)
+        else
+            sys:HideHUD()
+        end
     end
 end)
 
@@ -223,6 +234,14 @@ registerForEvent("onDraw", function()
                 CONFIG.oil_offset_c, used = ImGui.SliderFloat("Oil offset C", CONFIG.oil_offset_c, 0, 40)
                 changed = changed or used
 
+                if changed then SETTINGS.dirty = true end
+
+                if SETTINGS.dirty then
+                    ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
+                else
+                    ImGui.Text("Saved")
+                end
+
                 ImGui.Separator()
 
                 if ImGui.Button("Save Global") then
@@ -237,22 +256,68 @@ registerForEvent("onDraw", function()
                     SETTINGS.clearVehicle(vehKey)
                 end
 
-                if changed then SETTINGS.dirty = true end
-
-                else
-                    ImGui.Text("Not mounted")
-                end
-                ImGui.EndTabItem()
-                if SETTINGS.dirty then
-                    ImGui.Text("Unsaved changes")
-                else
-                    ImGui.Text("Saved")
-                end 
+            else
+                ImGui.Text("Not mounted")
             end
+            ImGui.EndTabItem()
+        end
+        if ImGui.BeginTabItem("2D HUD") then
+            local used
+            local changed = false
+
+            CONFIG.hud2d_enabled, used = ImGui.Checkbox("HUD enabled", CONFIG.hud2d_enabled)
+            changed = changed or used
+
+            CONFIG.hud2d_x, used = ImGui.DragFloat("Offset X", CONFIG.hud2d_x, 1.0, -2000, 2000, "%.0f")
+            changed = changed or used
+
+            CONFIG.hud2d_y, used = ImGui.DragFloat("Offset Y", CONFIG.hud2d_y, 1.0, -2000, 2000, "%.0f")
+            changed = changed or used
+
+            CONFIG.hud2d_scale, used = ImGui.SliderFloat("Scale", CONFIG.hud2d_scale, 0.2, 3.0)
+            changed = changed or used
+
+            CONFIG.hud2d_opacity, used = ImGui.SliderFloat("Opacity", CONFIG.hud2d_opacity, 0.0, 1.0)
+            changed = changed or used
+
+            ImGui.Text("Unit")
+            ImGui.SameLine()
+            if ImGui.RadioButton("C", CONFIG.hud2d_unit == "C") then
+                CONFIG.hud2d_unit = "C"
+                changed = true
+            end
+            ImGui.SameLine()
+            if ImGui.RadioButton("F", CONFIG.hud2d_unit == "F") then
+                CONFIG.hud2d_unit = "F"
+                changed = true
+            end
+
+            if changed then
+                SETTINGS.dirty = true
+                hudDirty = true
+            end
+
+            if SETTINGS.dirty then
+                ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
+            else
+                ImGui.Text("Saved")
+            end
+
+            ImGui.Separator()
+            
+            if ImGui.Button("Reset to defaults") then
+                SETTINGS.resetHud()
+                hudDirty = true
+            end
+
+            if ImGui.Button("Save Global##hud2d") then
+                SETTINGS.saveGlobal()
+            end
+
+            ImGui.EndTabItem()
         end
         ImGui.EndTabBar()
-    else
-        ImGui.Text("Not mounted.")
     end
-    ImGui.End()        
+
+    ImGui.End()
 end)
