@@ -22,9 +22,9 @@ Realistic warm-up instead of an instantly "ready" engine:
 - No Redscript, no UI polish needed yet
 
 **Phase 2 – 2D gauge**
-- Persistent in-game HUD (not tied to the CET overlay), drawn with ImGui
+- Persistent in-game HUD (not tied to the CET overlay)
 - Circular gauges for coolant and oil temperature
-- Still no Redscript
+- Here comes Redscript first time into play
 
 **Phase 3 – 3D gauge**
 - In-game 3D display via Redscript
