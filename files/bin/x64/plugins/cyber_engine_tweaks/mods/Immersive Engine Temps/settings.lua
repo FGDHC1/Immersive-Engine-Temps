@@ -104,7 +104,6 @@ end
 function S.clearVehicle(key)
     if not key then return end
     S.vehicles[key] = nil
-    S.resolve(key)
     S.write()
 end
 

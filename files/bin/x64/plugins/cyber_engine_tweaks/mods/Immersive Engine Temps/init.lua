@@ -38,6 +38,12 @@ local selectedKey = nil
 
 local hudDirty = true
 
+local function discardChanges()
+    SETTINGS.resolve(vehKey)
+    SETTINGS.dirty = false
+    hudDirty = true
+end
+
 local function getSystem()
     if sysCache then return sysCache end
     local c = Game.GetScriptableSystemsContainer()
@@ -106,11 +112,12 @@ registerForEvent("onUpdate", function(dt)
         STATE.tickAllUnmounted(dt, CONFIG, ambientNow, skipID)
         local sys = getSystem()
         if sys then sys:HideHUD() end
-        vehKey = nil
-        SETTINGS.resolve(nil)
+        if vehKey ~= nil then
+            vehKey = nil
+            discardChanges()
+        end
         return
     end
-
 
     local ok, speed = pcall(function() return veh:GetCurrentSpeed() end)
     local kmh = 0.0
@@ -178,7 +185,7 @@ registerForEvent("onDraw", function()
     
         if ImGui.BeginTabItem("Debug") then
             if DEBUG.mounted then
-                if ImGui.CollapsingHeader("--- Raw Data ---") then
+                if ImGui.CollapsingHeader("Raw Data") then
                     ImGui.Text(("Record: %s"):format(tostring(DEBUG.vehKey)))
                     ImGui.Text(("Vehicle ID: %s"):format(tostring(DEBUG.vehID)))
                     ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
@@ -187,7 +194,7 @@ registerForEvent("onDraw", function()
                 end
 
                 ImGui.Separator()
-                if ImGui.CollapsingHeader(("--- Derived Values ---")) then
+                if ImGui.CollapsingHeader(("Derived Values")) then
                     ImGui.Text(("Ambient now: %.1f C"):format(DEBUG.ambientNow))
                     ImGui.Text(("Max RPM learned: %.0f"):format(DEBUG.max_rpm))
                     ImGui.Text(("Coolant Heat: %.1f"):format(DEBUG.coolant_heat))
@@ -200,7 +207,7 @@ registerForEvent("onDraw", function()
                 end
 
                 ImGui.Separator()
-                if ImGui.CollapsingHeader(("--- Simulation ---")) then
+                if ImGui.CollapsingHeader(("Simulation")) then
                     ImGui.Text(("Coolant temp: %.1f C"):format(DEBUG.coolant_temp))
                     ImGui.Text(("Oil temp: %.1f C"):format(DEBUG.oil_temp))
                     ImGui.Text(("Engine Ready: %.0f %%"):format(DEBUG.engineReadyness * 100))
@@ -254,7 +261,15 @@ registerForEvent("onDraw", function()
                 ImGui.SameLine()
                 if ImGui.Button("Reset Car Setting") then
                     SETTINGS.clearVehicle(vehKey)
+                    discardChanges()
                 end
+                if SETTINGS.dirty then
+                    ImGui.SameLine()
+                    if ImGui.Button("Discard Changes##settings") then
+                        discardChanges()
+                    end
+                end
+
 
             else
                 ImGui.Text("Not mounted")
@@ -305,14 +320,22 @@ registerForEvent("onDraw", function()
 
             ImGui.Separator()
             
-            if ImGui.Button("Reset to defaults") then
+            if ImGui.Button("Reset to defaults##hud2d") then
                 SETTINGS.resetHud()
                 hudDirty = true
             end
-
+            ImGui.SameLine()
             if ImGui.Button("Save Global##hud2d") then
                 SETTINGS.saveGlobal()
             end
+
+            if SETTINGS.dirty then
+                ImGui.SameLine()
+                if ImGui.Button("Discard Changes##hud2d") then
+                    discardChanges()
+                end
+            end
+
 
             ImGui.EndTabItem()
         end
