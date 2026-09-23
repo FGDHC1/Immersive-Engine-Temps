@@ -34,9 +34,10 @@ local sysCache = nil
 local vehKey = nil
 local vehName = nil
 
-local selectedKey = nil
-
 local hudDirty = true
+
+local selectedPreset
+local newPresetName = ""
 
 local function discardChanges()
     SETTINGS.resolve(vehKey)
@@ -133,7 +134,7 @@ registerForEvent("onUpdate", function(dt)
     if key ~= vehKey then
         vehKey = key
         vehName = veh:GetDisplayName()
-        SETTINGS.resolve(vehKey)
+        discardChanges()
     end
 
     local v = STATE.getOrCreate(vehID, ambientNow, CONFIG)
@@ -269,8 +270,45 @@ registerForEvent("onDraw", function()
                         discardChanges()
                     end
                 end
-
-
+                ImGui.Separator()
+                ImGui.Text("Presets")
+                local names = {}
+                for name in pairs(SETTINGS.presets) do
+                    table.insert(names, name)
+                end
+                table.sort(names)
+                local preview = selectedPreset or "Select..."
+                if ImGui.BeginCombo("##presets", preview) then
+                    for _, name in ipairs(names) do
+                        if ImGui.Selectable(name, selectedPreset == name) then
+                            selectedPreset = name
+                        end
+                    end
+                    ImGui.EndCombo()
+                end
+                if selectedPreset and SETTINGS.presets[selectedPreset] then
+                    if ImGui.Button("Load##preset") then
+                        SETTINGS.loadPreset(selectedPreset)
+                    end
+                    ImGui.SameLine()
+                    if ImGui.Button("Overwrite##preset") then
+                        SETTINGS.savePreset(selectedPreset)
+                    end
+                    ImGui.SameLine()
+                    if ImGui.Button("Delete##preset") then
+                        SETTINGS.deletePreset(selectedPreset)
+                        selectedPreset = nil
+                    end
+                end
+                newPresetName = ImGui.InputText("##newpreset", newPresetName, 32)
+                ImGui.SameLine()
+                if SETTINGS.presets[newPresetName] then
+                    ImGui.Text("Preset name already exists")
+                elseif ImGui.Button("Save new preset") and newPresetName ~= "" then
+                    SETTINGS.savePreset(newPresetName)
+                    selectedPreset = newPresetName
+                    newPresetName = ""
+                end
             else
                 ImGui.Text("Not mounted")
             end

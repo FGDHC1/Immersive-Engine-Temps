@@ -4,6 +4,7 @@ local S = {
     values   = {}, -- current values
     global   = {}, -- changes from defaults
     vehicles = {},
+    presets  = {},
     dirty    = false, -- unsaved changes?
 }
 
@@ -49,6 +50,7 @@ function S.load()
         if ok and type(decoded) == "table" then
             S.global   = decoded.global   or {}
             S.vehicles = decoded.vehicles or {}
+            S.presets = decoded.presets or {}
         else
             print("[Immersive Engine Temps] settings.json unlesbar, nutze Defaults")
         end
@@ -59,7 +61,7 @@ function S.load()
 end
 
 function S.write()
-    local ok, encoded = pcall(json.encode, { global = S.global, vehicles = S.vehicles })
+    local ok, encoded = pcall(json.encode, { global = S.global, vehicles = S.vehicles, presets = S.presets })
     if not ok then
         print("[Immersive Engine Temps] Speichern fehlgeschlagen: " .. tostring(encoded))
         return
@@ -69,8 +71,6 @@ function S.write()
     if not file then return end
     file:write(encoded)
     file:close()
-
-    S.dirty = false
 end
 
 local function diff(base, skipGlobalOnly)
@@ -88,6 +88,7 @@ end
 function S.saveGlobal()
     S.global = diff(DEFAULTS)
     S.write()
+    S.dirty = false
 end
 
 function S.saveVehicle(key, name)
@@ -99,6 +100,7 @@ function S.saveVehicle(key, name)
 
     S.vehicles[key] = { name = name or key, values = diff(base, true), }
     S.write()
+    S.dirty = false
 end
 
 function S.clearVehicle(key)
@@ -107,12 +109,51 @@ function S.clearVehicle(key)
     S.write()
 end
 
+local function loadVehicleValues(values)
+        for k, v in pairs(DEFAULTS) do
+        if not GLOBAL_ONLY[k] then
+            if S.global[k] ~= nil then
+                S.values[k] = S.global[k]
+            else
+                S.values[k] = v
+            end
+        end
+    end
+    apply(S.values, values)
+    S.dirty = true
+end
+
+
 function S.import(key)
     local entry = S.vehicles[key]
     if not entry then return end
-    apply(S.values, entry.values)
-    S.dirty = true
+    loadVehicleValues(entry.values)
 end
+
+function S.savePreset(name)
+    if not name or name == "" then return end
+    local presetValues = {}
+    for k in pairs(DEFAULTS) do
+        if not GLOBAL_ONLY[k] then
+            presetValues[k] = S.values[k]
+        end
+    end
+    S.presets[name] = { values = presetValues }
+    S.write()
+end
+
+function S.loadPreset(name)
+    local entry = S.presets[name]
+    if not entry then return end
+    loadVehicleValues(entry.values)
+end
+
+function S.deletePreset(name)
+    if not name then return end
+    S.presets[name] = nil
+    S.write()
+end
+
 
 function S.resetHud()
     for k in pairs(GLOBAL_ONLY) do
