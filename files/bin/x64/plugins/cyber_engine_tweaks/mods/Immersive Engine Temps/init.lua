@@ -35,6 +35,7 @@ local vehKey = nil
 local vehName = nil
 
 local hudDirty = true
+local hud3dDirty = true
 
 local selectedPreset
 local newPresetName = ""
@@ -43,6 +44,7 @@ local function discardChanges()
     SETTINGS.resolve(vehKey)
     SETTINGS.dirty = false
     hudDirty = true
+    hud3dDirty = true
 end
 
 local function getSystem()
@@ -113,6 +115,7 @@ registerForEvent("onUpdate", function(dt)
         STATE.tickAllUnmounted(dt, CONFIG, ambientNow, skipID)
         local sys = getSystem()
         if sys then sys:HideHUD() end
+        if sys then sys:Hide3D() end
         if vehKey ~= nil then
             vehKey = nil
             discardChanges()
@@ -174,6 +177,15 @@ registerForEvent("onUpdate", function(dt)
             sys:PushValues(math.floor(rpm), v.coolant_temp, v.oil_temp)
         else
             sys:HideHUD()
+        end
+        if CONFIG.hud3d_enabled then
+            if hud3dDirty then
+                sys:Place3D(CONFIG.hud3d_x, CONFIG.hud3d_y, CONFIG.hud3d_z, CONFIG.hud3d_pitch, CONFIG.hud3d_yaw, CONFIG.hud3d_roll, CONFIG.hud3d_scale)
+                hud3dDirty = false
+            end
+            sys:Update3D()
+        else
+            sys:Hide3D()
         end
     end
 end)
@@ -377,8 +389,57 @@ registerForEvent("onDraw", function()
 
             ImGui.EndTabItem()
         end
+        if ImGui.BeginTabItem("3D HUD") then
+            local used
+            CONFIG.hud3d_enabled, used = ImGui.Checkbox("3D HUD Enabled", CONFIG.hud3d_enabled)
+            if used then SETTINGS.dirty = true end
+            if DEBUG.mounted then
+                local changed = false
+                ImGui.Separator()
+                ImGui.Text("Placement (This car)")
+
+                CONFIG.hud3d_x, used = ImGui.DragFloat("X (m)", CONFIG.hud3d_x, 0.005, -3.0, 3.0, "%.3f")
+                changed = changed or used
+                CONFIG.hud3d_y, used = ImGui.DragFloat("Y (m)", CONFIG.hud3d_y, 0.005, -3.0, 3.0, "%.3f")
+                changed = changed or used
+                CONFIG.hud3d_z, used = ImGui.DragFloat("Z (m)", CONFIG.hud3d_z, 0.005, -3.0, 3.0, "%.3f")
+                changed = changed or used
+
+                CONFIG.hud3d_pitch, used = ImGui.DragFloat("Pitch", CONFIG.hud3d_pitch, 0.5, -180.0, 180.0, "%.1f")
+                changed = changed or used
+                CONFIG.hud3d_yaw, used = ImGui.DragFloat("Yaw", CONFIG.hud3d_yaw, 0.5, -180.0, 180.0, "%.1f")
+                changed = changed or used
+                CONFIG.hud3d_roll, used = ImGui.DragFloat("Roll", CONFIG.hud3d_roll, 0.5, -180.0, 180.0, "%.1f")
+                changed = changed or used
+                CONFIG.hud3d_scale, used = ImGui.DragFloat("Scale", CONFIG.hud3d_scale, 0.005, 0.001, 1.0, "%.3f")
+                changed = changed or used
+
+                if changed then
+                    SETTINGS.dirty = true
+                    hud3dDirty = true
+                end
+
+                if SETTINGS.dirty then
+                    ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
+                else
+                    ImGui.Text("Saved")
+                end
+                if ImGui.Button("Save To this Car##hud3d") then
+                    SETTINGS.saveVehicle(vehKey, vehName)
+                end
+                if ImGui.Button("Save Global##hud3d") then
+                   SETTINGS.saveGlobal()
+                end
+                if SETTINGS.dirty then
+                    ImGui.SameLine()
+                    if ImGui.Button("Discard Changes##hud3d") then
+                        discardChanges()
+                    end
+                end
+            end
+            ImGui.EndTabItem()        
+        end
         ImGui.EndTabBar()
     end
-
     ImGui.End()
 end)

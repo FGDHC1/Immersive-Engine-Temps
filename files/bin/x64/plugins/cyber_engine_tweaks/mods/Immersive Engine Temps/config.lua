@@ -30,6 +30,14 @@ return {
     hud2d_y = -333.0,
     hud2d_scale = 1.0,
     hud2d_opacity = 1.0,
-    hud2d_unit = "C"
+    hud2d_unit = "C",
 
+    hud3d_enabled = true,
+    hud3d_x = 0.0,
+    hud3d_y = 0.0,
+    hud3d_z = 0.0,
+    hud3d_pitch = 0.0,
+    hud3d_yaw = 0.0,
+    hud3d_roll = 0.0,
+    hud3d_scale = 0.1
 }

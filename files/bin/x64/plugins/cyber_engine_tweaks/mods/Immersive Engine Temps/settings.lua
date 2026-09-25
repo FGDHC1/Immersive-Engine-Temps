@@ -17,6 +17,16 @@ local GLOBAL_ONLY = {
     hud2d_scale   = true,
     hud2d_opacity = true,
     hud2d_unit    = true,
+    hud3d_enabled = true,
+}
+local PLACEMENT = {
+    hud3d_x = true,
+    hud3d_y = true,
+    hud3d_z = true,
+    hud3d_pitch = true,
+    hud3d_yaw = true,
+    hud3d_roll = true,
+    hud3d_scale = true,
 }
 
 local function apply(target, src)
@@ -111,7 +121,7 @@ end
 
 local function loadVehicleValues(values)
         for k, v in pairs(DEFAULTS) do
-        if not GLOBAL_ONLY[k] then
+        if not GLOBAL_ONLY[k] and not PLACEMENT[k] then
             if S.global[k] ~= nil then
                 S.values[k] = S.global[k]
             else
@@ -134,7 +144,7 @@ function S.savePreset(name)
     if not name or name == "" then return end
     local presetValues = {}
     for k in pairs(DEFAULTS) do
-        if not GLOBAL_ONLY[k] then
+        if not GLOBAL_ONLY[k] and not PLACEMENT[k] then
             presetValues[k] = S.values[k]
         end
     end

@@ -2,6 +2,7 @@ module ImmersiveEngineTemps
 
 public class EngineTempSystem extends ScriptableSystem {
   private let hud: ref<EngineHUD>;
+  private let hud3d: ref<EngineTemp3DHud>;
   private let cfgX: Float = 0.0;
   private let cfgY: Float = 0.0;
   private let cfgScale: Float = 1.0;
@@ -44,6 +45,25 @@ public class EngineTempSystem extends ScriptableSystem {
       this.hud.ApplyConfig(x, y, scale, opacity, unitF);
     }
   }
+  public func Update3D() -> Void {
+    if !IsDefined(this.hud3d) { 
+      this.hud3d = new EngineTemp3DHud();
+    }
+    this.hud3d.Update(GetPlayer(GetGameInstance()).GetMountedVehicle());
+  }
+
+  public func Hide3D() -> Void {
+    if IsDefined(this.hud3d) {
+      this.hud3d.Release();
+
+    }
+  }
+  public func Place3D(x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
+    if !IsDefined(this.hud3d) {
+      this.hud3d = new EngineTemp3DHud();
+    }
+    this.hud3d.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+  } 
 }
 
 public class EngineHUD extends IScriptable {
