@@ -13,7 +13,18 @@
 - [ ] Timeskip detection
 - [ ] Implement HUD config edit
 
+## Phase 3 – 3D-HUD (aktuell)
+- [ ] Eigener 3D-Atlas mit Gauge-Texturen (Style A, Style B, Nadel)
+- [ ] Platzhalter-Ziffernblatt im 3D durch eigene Gauge ersetzen
+- [ ] Helligkeits-Slider (Multiplikator auf ink-Farben, Basis EmissiveEV)
+- [ ] Nadel drehen + Umschalten Style A/B
+- [ ] Option: Nadel nach Temperatur einfärben
+- [ ] Eigene .inkwidget statt CrystalCoat-Widget
+- [ ] Pitch 90 als Default in config (Plane liegt flach)
+
+
 ## Cleanup / Optimierung (wenn alles läuft)
+
 
 ### Lua
 - [ ] `S.import` wird nicht mehr genutzt (Presets ersetzen es) → entfernen
@@ -29,11 +40,19 @@
 
 ### Redscript 3D
 - [ ] Diagnose-Logs (`ResourceExists`, "NOT FOUND") nach dem Test entfernen oder leiser machen
-- 
+- [ ] Stage-Logs in `TryBuildGauge` leiser machen oder hinter Debug-Schalter
+- [ ] `placementDirty` entfernen (wird nicht mehr gelesen)
+- [ ] Feld `gauge` nach oben zu den anderen Feldern
+- [ ] `visualScale` in `OnHostAssemble` entfernen (wird von `ApplyPlacement` überschrieben)
+
+### Assets (WolvenKit)
+- [ ] `parameters[1]` in `iet_plate.mesh` prüfen (Überbleibsel der Vanilla-Hülle)
 
 ### Repo
 - [ ] Zeilenenden vereinheitlichen (`.gitattributes`)
 - [ ] README: Codeware als Abhängigkeit eintragen
+
+
 
 ### Nicht gemacht
 - ~~Engine is warm if vehicle is called - I think its not rlly possible for me, i have to get more knoledge over the vehicle system.~~

@@ -1,5 +1,7 @@
 module ImmersiveEngineTemps
 
+public class IETScreenComponent extends worlduiWidgetComponent {}
+
 public class EngineTemp3DHud extends IScriptable {
     private let hostID: EntityID;
     private let carID: EntityID;
@@ -12,6 +14,7 @@ public class EngineTemp3DHud extends IScriptable {
     private let roll: Float;
     private let scale: Float = 0.1;
     private let placementDirty: Bool;
+    private let gaugeStage: Int32;
     
     public func Update(car: wref<VehicleObject>) -> Void {
         if !IsDefined(car) { return; }
@@ -27,6 +30,7 @@ public class EngineTemp3DHud extends IScriptable {
         }
         if this.bound {
             this.ApplyPlacement();
+            this.TryBuildGauge();
         }
     }
 
@@ -102,6 +106,48 @@ public class EngineTemp3DHud extends IScriptable {
         this.hostID = empty;
         this.carID = empty;
         this.bound = false;
+        this.gauge = null;
+        this.gaugeStage = 0;
+    }
+
+    private let gauge: wref<inkImage>;
+
+    private func TryBuildGauge() -> Void {
+        if IsDefined(this.gauge) { return; }
+        
+        let host = GameInstance.FindEntityByID(GetGameInstance(), this.hostID);
+        if !IsDefined(host) { return; }
+
+        let screen = host.FindComponentByName(n"iet_screen") as worlduiWidgetComponent;
+        if !IsDefined(screen) { this.Stage(1, "no screen component"); return; }
+
+        let ctrl = screen.GetGameController();
+        if !IsDefined(ctrl) { this.Stage(2, "no game controller"); return; }
+
+        let root = ctrl.GetRootCompoundWidget();
+        if !IsDefined(root) { this.Stage(3, "no root widget"); return; }
+
+        root.RemoveAllChildren();
+
+        root.SetVisible(true);
+        root.SetOpacity(1.0);
+
+        let img = new inkImage();
+        img.SetAtlasResource(r"immersiveenginetemps\\immersive_engine_temps_icons.inkatlas");
+        img.SetTexturePart(n"ziffernblatt");
+        img.SetAnchor(inkEAnchor.Fill);
+        img.SetTintColor(HDRColor(0.3, 2.0, 2.4, 1.0));
+        img.Reparent(root);
+
+        this.gauge = img;
+        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] Gauge Created");
+    }
+    private func Stage(stage: Int32, msg: String) -> Void {
+        if this.gaugeStage != stage {
+            this.gaugeStage = stage;
+            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] gauge stage " + IntToString(stage) + ": " + msg);
+
+        }
     }
 }
 
@@ -116,12 +162,30 @@ public class EngineTemp3DService extends ScriptableService {
 
         let plate = new MeshComponent();
         plate.name = n"iet_plate";
-        plate.mesh *= r"ep1\\environment\\architecture\\watson\\kabuki\\wat_kab_building_f_window_w300_aa_window_plane.mesh";
+        plate.mesh *= r"immersiveenginetemps\\hud3d\\iet_plate.mesh";
         plate.meshAppearance = n"default";
         plate.visualScale = Vector3(0.1, 0.1, 0.1);
         plate.castShadows = shadowsShadowCastingMode.Never;
+        plate.renderingPlane = ERenderingPlane.RPl_Scene;
+        plate.objectTypeID = ERenderObjectType.ROT_Vehicle;
 
         host.AddComponent(plate);
+
+        let screen = new IETScreenComponent();
+        screen.name = n"iet_screen";
+        
+        screen.widgetResource *= r"base\\gameplay\\vehicles\\visual_customization\\vvc_car_appearance_widget.inkwidget";
+        screen.meshTargetBinding = new worlduiMeshTargetBinding();
+        screen.meshTargetBinding.bindName = n"iet_plate";
+
+        screen.limitedSpawnDistanceFromVehicle = false;
+        screen.sceneWidgetProperties.isAlwaysVisible = true;
+        screen.sceneWidgetProperties.renderingPlane = ERenderingPlane.RPl_Scene;
+        screen.sceneWidgetProperties.projectionPlaneSize.X = 1.0;
+        screen.sceneWidgetProperties.projectionPlaneSize.Y = 1.0;
+        
+        host.AddComponent(screen);
+
         LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D plate added");
     }
 }
