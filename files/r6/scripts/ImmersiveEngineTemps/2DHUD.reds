@@ -45,11 +45,11 @@ public class EngineTempSystem extends ScriptableSystem {
       this.hud.ApplyConfig(x, y, scale, opacity, unitF);
     }
   }
-  public func Update3D() -> Void {
+  public func Update3D(coolant: Float, oil: Float) -> Void {
     if !IsDefined(this.hud3d) { 
       this.hud3d = new EngineTemp3DHud();
     }
-    this.hud3d.Update(GetPlayer(GetGameInstance()).GetMountedVehicle());
+    this.hud3d.Update(GetPlayer(GetGameInstance()).GetMountedVehicle(), coolant);
   }
 
   public func Hide3D() -> Void {
@@ -63,7 +63,13 @@ public class EngineTempSystem extends ScriptableSystem {
       this.hud3d = new EngineTemp3DHud();
     }
     this.hud3d.SetPlacement(x, y, z, pitch, yaw, roll, scale);
-  } 
+  }
+  public func TuneNeedle(px: Float, py: Float, start: Float, sweep: Float, len: Float, thick: Float) -> Void {
+    if !IsDefined(this.hud3d) {
+        this.hud3d = new EngineTemp3DHud();
+    }
+    this.hud3d.TuneNeedle(px, py, start, sweep, len, thick);
+}
 }
 
 public class EngineHUD extends IScriptable {

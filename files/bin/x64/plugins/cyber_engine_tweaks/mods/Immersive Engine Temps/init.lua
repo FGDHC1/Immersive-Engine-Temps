@@ -40,6 +40,8 @@ local hud3dDirty = true
 local selectedPreset
 local newPresetName = ""
 
+local NEEDLE_DBG = { px = 0.95, py = 0.1, start = 0.0, sweep = 180.0, len = 1.0, thick = 1.0, override = false, temp = 70.0 }
+
 local function discardChanges()
     SETTINGS.resolve(vehKey)
     SETTINGS.dirty = false
@@ -183,13 +185,14 @@ registerForEvent("onUpdate", function(dt)
                 sys:Place3D(CONFIG.hud3d_x, CONFIG.hud3d_y, CONFIG.hud3d_z, CONFIG.hud3d_pitch, CONFIG.hud3d_yaw, CONFIG.hud3d_roll, CONFIG.hud3d_scale)
                 hud3dDirty = false
             end
-            sys:Update3D()
+            local temp3d = v.coolant_temp
+            if NEEDLE_DBG.override then temp3d = NEEDLE_DBG.temp end
+            sys:Update3D(temp3d, v.oil_temp)
         else
             sys:Hide3D()
         end
     end
 end)
-
 
 registerForEvent("onDraw", function()
     if not isOverlayVisible then return end
@@ -411,7 +414,7 @@ registerForEvent("onDraw", function()
                 changed = changed or used
                 CONFIG.hud3d_roll, used = ImGui.DragFloat("Roll", CONFIG.hud3d_roll, 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
-                CONFIG.hud3d_scale, used = ImGui.DragFloat("Scale", CONFIG.hud3d_scale, 0.005, 0.001, 1.0, "%.3f")
+                CONFIG.hud3d_scale, used = ImGui.DragFloat("Scale", CONFIG.hud3d_scale, 0.0005, 0.001, 0.30, "%.4f")
                 changed = changed or used
 
                 if changed then
@@ -434,6 +437,35 @@ registerForEvent("onDraw", function()
                     ImGui.SameLine()
                     if ImGui.Button("Discard Changes##hud3d") then
                         discardChanges()
+                    end
+                end
+                ImGui.Separator()
+                if ImGui.CollapsingHeader("Needle Tuning (Debug)") then
+                    NEEDLE_DBG.px, used = ImGui.DragFloat("Pivot X##ndl", NEEDLE_DBG.px, 0.001, 0.0, 1.0, "%.3f")
+                    changed = changed or used
+
+                    NEEDLE_DBG.py, used = ImGui.DragFloat("Pivot Y##ndl", NEEDLE_DBG.py, 0.001, 0.0, 1.0, "%.3f")
+                    changed = changed or used
+
+                    NEEDLE_DBG.start, used = ImGui.DragFloat("Start angle##ndl", NEEDLE_DBG.start, 0.5, -360.0, 360.0, "%.1f")
+                    changed = changed or used
+
+                    NEEDLE_DBG.sweep, used = ImGui.DragFloat("Sweep##ndl", NEEDLE_DBG.sweep, 0.5, -360.0, 360.0, "%.1f")
+                    changed = changed or used
+
+                    NEEDLE_DBG.override = ImGui.Checkbox("Override temp##ndl", NEEDLE_DBG.override)
+
+                    NEEDLE_DBG.temp = ImGui.SliderFloat("Test temp##ndl", NEEDLE_DBG.temp, 0.0, 140.0, "%.1f")
+
+                    NEEDLE_DBG.len, used = ImGui.DragFloat("Length##ndl", NEEDLE_DBG.len, 0.005, 0.1, 2.0, "%.3f")
+                    changed = changed or used
+
+                    NEEDLE_DBG.thick, used = ImGui.DragFloat("Thickness##ndl", NEEDLE_DBG.thick, 0.005, 0.1, 2.0, "%.3f")
+                    changed = changed or used
+
+                    if changed then
+                        local sys = getSystem()
+                        if sys then sys:TuneNeedle(NEEDLE_DBG.px, NEEDLE_DBG.py, NEEDLE_DBG.start, NEEDLE_DBG.sweep, NEEDLE_DBG.len, NEEDLE_DBG.thick) end
                     end
                 end
             end

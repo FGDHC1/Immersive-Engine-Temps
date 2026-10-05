@@ -12,6 +12,8 @@
 - [ ] Implement in 2d hud that it dissapears when in wheapon wheel
 - [ ] Timeskip detection
 - [ ] Implement HUD config edit
+- [ ] UI Shows up delayed at start
+- [ ] 3D HUD Dials make full turn as startup animation
 
 ## Phase 3 – 3D-HUD (aktuell)
 - [ ] Eigener 3D-Atlas mit Gauge-Texturen (Style A, Style B, Nadel)
@@ -23,8 +25,7 @@
 - [ ] Pitch 90 als Default in config (Plane liegt flach)
 
 
-## Cleanup / Optimierung (wenn alles läuft)
-
+## Cleanup / Optimierung 
 
 ### Lua
 - [ ] `S.import` wird nicht mehr genutzt (Presets ersetzen es) → entfernen
@@ -32,6 +33,7 @@
 - [ ] "Save To this Car" setzt dirty zurück, obwohl HUD-Änderungen nicht gespeichert werden
 - [ ] `DEBUG.engineReadyness` fehlt in der DEBUG-Starttabelle
 - [ ] Funktionsname `loadVehicleValues` → `loadSimValues` (lädt auch Presets)
+- [ ] Scale parameter genauer machen, ist sehr nervig mit den grossen schritten
 
 ### Redscript 2D
 - [ ] Fest verdrahtete Werte in Config auslagern: 8000 RPM, Temp-Bereich 20–120, segCount 16
@@ -46,7 +48,7 @@
 - [ ] `visualScale` in `OnHostAssemble` entfernen (wird von `ApplyPlacement` überschrieben)
 
 ### Assets (WolvenKit)
-- [ ] `parameters[1]` in `iet_plate.mesh` prüfen (Überbleibsel der Vanilla-Hülle)
+- [ ] `parameters[1]` in `iet_plate.mesh` prüfen
 
 ### Repo
 - [ ] Zeilenenden vereinheitlichen (`.gitattributes`)

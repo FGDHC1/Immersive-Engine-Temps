@@ -15,8 +15,18 @@ public class EngineTemp3DHud extends IScriptable {
     private let scale: Float = 0.1;
     private let placementDirty: Bool;
     private let gaugeStage: Int32;
+    private let needle: wref<inkImage>;
+    private let startAngle: Float = 0.0;
+    private let sweep: Float = 180.0;
+    private let mintemp: Float = 20;
+    private let maxtemp: Float = 120;
+    private let pivotX: Float = 0.95;
+    private let pivotY: Float = 0.1;
+    private let needleLen: Float = 0.5;
+    private let needleThick: Float = 1.0;
+
     
-    public func Update(car: wref<VehicleObject>) -> Void {
+    public func Update(car: wref<VehicleObject>, temp: Float) -> Void {
         if !IsDefined(car) { return; }
         if EntityID.IsDefined(this.hostID) && !Equals(car.GetEntityID(), this.carID) {
             this.Release();
@@ -31,6 +41,7 @@ public class EngineTemp3DHud extends IScriptable {
         if this.bound {
             this.ApplyPlacement();
             this.TryBuildGauge();
+            this.SetNeedle(temp);
         }
     }
 
@@ -108,6 +119,7 @@ public class EngineTemp3DHud extends IScriptable {
         this.bound = false;
         this.gauge = null;
         this.gaugeStage = 0;
+        this.needle = null;
     }
 
     private let gauge: wref<inkImage>;
@@ -133,13 +145,28 @@ public class EngineTemp3DHud extends IScriptable {
         root.SetOpacity(1.0);
 
         let img = new inkImage();
-        img.SetAtlasResource(r"immersiveenginetemps\\immersive_engine_temps_icons.inkatlas");
-        img.SetTexturePart(n"ziffernblatt");
+        img.SetAtlasResource(r"immersiveenginetemps\\hud3d\\iet_gauges3d.inkatlas");
+        img.SetTexturePart(n"temp_gauge");
         img.SetAnchor(inkEAnchor.Fill);
-        img.SetTintColor(HDRColor(0.3, 2.0, 2.4, 1.0));
+        img.SetTintColor(HDRColor(1, 1, 1, 1.0));
         img.Reparent(root);
 
+        let needle = new inkImage();
+        let rs = root.GetSize();
+        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] root size " + FloatToString(rs.X) + " x " + FloatToString(rs.Y));
+        
+        needle.SetAtlasResource(r"immersiveenginetemps\\hud3d\\iet_gauges3d.inkatlas");
+        needle.SetTexturePart(n"temp_gauge_needle");
+        needle.SetSize(Vector2(rs.X, rs.X * 0.25));
+        needle.SetAnchor(inkEAnchor.Centered);
+        needle.SetAnchorPoint(Vector2(this.pivotX, this.pivotY));
+        needle.SetRenderTransformPivot(Vector2(this.pivotX, this.pivotY));
+        needle.SetScale(Vector2(this.needleLen, this.needleThick));
+        needle.SetTintColor(HDRColor(1, 1, 1, 1.0));
+        needle.Reparent(root);
+
         this.gauge = img;
+        this.needle = needle;
         LogChannel(n"DEBUG", "[ImmersiveEngineTemps] Gauge Created");
     }
     private func Stage(stage: Int32, msg: String) -> Void {
@@ -149,6 +176,28 @@ public class EngineTemp3DHud extends IScriptable {
 
         }
     }
+    private func SetNeedle(temp: Float) -> Void {
+        if !IsDefined(this.needle) { return; }
+        let fill: Float = (temp - this.mintemp) / (this.maxtemp - this.mintemp);
+        if fill < 0.0 { fill = 0.0; }
+        if fill > 1.0 { fill = 1.0; }
+        this.needle.SetRotation(this.startAngle + fill * this.sweep);
+    }
+
+    public func TuneNeedle(px: Float, py: Float, start: Float, sweep: Float, len: Float, thick: Float) -> Void {
+        this.pivotX = px;
+        this.pivotY = py;
+        this.startAngle = start;
+        this.sweep = sweep;
+        this.needleLen = len;
+        this.needleThick = thick;
+        if IsDefined(this.needle) {
+            this.needle.SetAnchorPoint(Vector2(px, py));
+            this.needle.SetRenderTransformPivot(Vector2(px, py));
+            this.needle.SetScale(Vector2(len, thick));
+        }
+    }
+           
 }
 
 public class EngineTemp3DService extends ScriptableService {

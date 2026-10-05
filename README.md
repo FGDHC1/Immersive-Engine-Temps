@@ -16,7 +16,7 @@ Realistic warm-up instead of an instantly "ready" engine:
 
 ## Planned roadmap
 
-**Phase 1 – Logic & debug output** *(currently here)*
+**Phase 1 – Logic & debug output** 
 - Pure logic in CET/Lua: temperature formulas, per-vehicle persistence, cooldown timer
 - Values shown as plain text in the CET overlay first, to check the behavior feels right
 - No Redscript, no UI polish needed yet
@@ -26,7 +26,7 @@ Realistic warm-up instead of an instantly "ready" engine:
 - Circular gauges for coolant and oil temperature
 - Here comes Redscript first time into play
 
-**Phase 3 – 3D gauge**
+**Phase 3 – 3D gauge** *(currently here)*
 - In-game 3D display via Redscript
 - Engine readiness value affects the vehicle itself (less power until up to operating temperature)
 
