@@ -238,3 +238,37 @@ public class EngineTemp3DService extends ScriptableService {
         LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D plate added");
     }
 }
+public class EngineTemp3DPair extends IScriptable {
+    private let cool: ref<EngineTemp3DHud>;
+    private let oil: ref<EngineTemp3DHud>;
+
+    private func Ensure() -> Void {
+        if !IsDefined(this.cool) { this.cool = new EngineTemp3DHud(); }
+        if !IsDefined(this.oil) { this.oil = new EngineTemp3DHud(); }
+    }
+
+    public func Update(car: wref<VehicleObject>, coolant: Float, oil: Float) -> Void {
+        this.Ensure();
+        this.cool.Update(car, coolant);
+        this.oil.Update(car, oil);
+
+    }
+
+    public func Release() -> Void {
+        if IsDefined(this.cool) { this.cool.Release(); }
+        if IsDefined(this.oil) { this.oil.Release(); }
+    }
+
+    public func SetPlacement(x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
+        this.Ensure();
+        this.cool.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+        this.oil.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+    }
+
+    public func TuneNeedle(px: Float, py: Float, start: Float, sweep: Float, len: Float, thick: Float) -> Void {
+        this.Ensure();
+        this.cool.TuneNeedle(px, py, start, sweep, len, thick);
+        this.oil.TuneNeedle(px, py, start, sweep, len, thick);
+    }
+
+}
