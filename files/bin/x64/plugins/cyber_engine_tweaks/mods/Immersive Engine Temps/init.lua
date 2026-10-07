@@ -42,6 +42,8 @@ local newPresetName = ""
 
 local NEEDLE_DBG = { px = 0.95, py = 0.1, start = 0.0, sweep = 180.0, len = 1.0, thick = 1.0, override = false, temp = 70.0 }
 
+local editGauge = "cool"
+
 local function discardChanges()
     SETTINGS.resolve(vehKey)
     SETTINGS.dirty = false
@@ -182,12 +184,13 @@ registerForEvent("onUpdate", function(dt)
         end
         if CONFIG.hud3d_enabled then
             if hud3dDirty then
-                sys:Place3D(CONFIG.hud3d_x, CONFIG.hud3d_y, CONFIG.hud3d_z, CONFIG.hud3d_pitch, CONFIG.hud3d_yaw, CONFIG.hud3d_roll, CONFIG.hud3d_scale)
+                sys:Place3D(0, CONFIG.hud3d_cool_x, CONFIG.hud3d_cool_y, CONFIG.hud3d_cool_z, CONFIG.hud3d_cool_pitch, CONFIG.hud3d_cool_yaw, CONFIG.hud3d_cool_roll, CONFIG.hud3d_cool_scale)
+                sys:Place3D(1, CONFIG.hud3d_oil_x, CONFIG.hud3d_oil_y, CONFIG.hud3d_oil_z, CONFIG.hud3d_oil_pitch, CONFIG.hud3d_oil_yaw, CONFIG.hud3d_oil_roll, CONFIG.hud3d_oil_scale)
                 hud3dDirty = false
             end
             local temp3d = v.coolant_temp
             if NEEDLE_DBG.override then temp3d = NEEDLE_DBG.temp end
-            sys:Update3D(temp3d, v.oil_temp)
+            sys:Update3D(temp3d, v.oil_temp, CONFIG.hud3d_cool_enabled, CONFIG.hud3d_oil_enabled)
         else
             sys:Hide3D()
         end
@@ -398,23 +401,38 @@ registerForEvent("onDraw", function()
             if used then SETTINGS.dirty = true end
             if DEBUG.mounted then
                 local changed = false
+                local prefix = "hud3d_" .. editGauge .. "_"
+                
                 ImGui.Separator()
+
+                CONFIG.hud3d_cool_enabled, used = ImGui.Checkbox("Coolant gauge##hud3d", CONFIG.hud3d_cool_enabled)
+                changed = changed or used
+                ImGui.SameLine()
+                CONFIG.hud3d_oil_enabled, used = ImGui.Checkbox("Oil gauge##hud3d", CONFIG.hud3d_oil_enabled)
+                changed = changed or used
+                
+                ImGui.Text("Edit:")
+                ImGui.SameLine()
+                if ImGui.RadioButton("Coolant##edit", editGauge == "cool") then editGauge = "cool" end
+                ImGui.SameLine()
+                if ImGui.RadioButton("Oil##edit", editGauge == "oil") then editGauge = "oil" end
+
                 ImGui.Text("Placement (This car)")
 
-                CONFIG.hud3d_x, used = ImGui.DragFloat("X (m)", CONFIG.hud3d_x, 0.005, -3.0, 3.0, "%.3f")
+                CONFIG[prefix .. "x"], used = ImGui.DragFloat("X (m)", CONFIG[prefix .. "x"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
-                CONFIG.hud3d_y, used = ImGui.DragFloat("Y (m)", CONFIG.hud3d_y, 0.005, -3.0, 3.0, "%.3f")
+                CONFIG[prefix .. "y"], used = ImGui.DragFloat("Y (m)", CONFIG[prefix .. "y"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
-                CONFIG.hud3d_z, used = ImGui.DragFloat("Z (m)", CONFIG.hud3d_z, 0.005, -3.0, 3.0, "%.3f")
+                CONFIG[prefix .. "z"], used = ImGui.DragFloat("Z (m)", CONFIG[prefix .. "z"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
 
-                CONFIG.hud3d_pitch, used = ImGui.DragFloat("Pitch", CONFIG.hud3d_pitch, 0.5, -180.0, 180.0, "%.1f")
+                CONFIG[prefix .. "pitch"], used = ImGui.DragFloat("Pitch", CONFIG[prefix .. "pitch"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
-                CONFIG.hud3d_yaw, used = ImGui.DragFloat("Yaw", CONFIG.hud3d_yaw, 0.5, -180.0, 180.0, "%.1f")
+                CONFIG[prefix .. "yaw"], used = ImGui.DragFloat("Yaw", CONFIG[prefix .. "yaw"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
-                CONFIG.hud3d_roll, used = ImGui.DragFloat("Roll", CONFIG.hud3d_roll, 0.5, -180.0, 180.0, "%.1f")
+                CONFIG[prefix .. "roll"], used = ImGui.DragFloat("Roll", CONFIG[prefix .. "roll"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
-                CONFIG.hud3d_scale, used = ImGui.DragFloat("Scale", CONFIG.hud3d_scale, 0.0005, 0.001, 0.30, "%.4f")
+                CONFIG[prefix .. "scale"], used = ImGui.DragFloat("Scale", CONFIG[prefix .. "scale"], 0.0005, 0.001, 0.30, "%.4f")
                 changed = changed or used
 
                 if changed then

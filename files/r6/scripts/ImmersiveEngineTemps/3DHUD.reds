@@ -247,10 +247,19 @@ public class EngineTemp3DPair extends IScriptable {
         if !IsDefined(this.oil) { this.oil = new EngineTemp3DHud(); }
     }
 
-    public func Update(car: wref<VehicleObject>, coolant: Float, oil: Float) -> Void {
+    public func Update(car: wref<VehicleObject>, coolant: Float, oil: Float, coolOn: Bool, oilOn: Bool) -> Void {
         this.Ensure();
-        this.cool.Update(car, coolant);
-        this.oil.Update(car, oil);
+        if coolOn { 
+            this.cool.Update(car, coolant);
+        } else {
+            this.cool.Release();
+        }
+
+        if oilOn { 
+            this.oil.Update(car, oil);
+        } else {
+            this.oil.Release();
+        }
 
     }
 
@@ -259,10 +268,13 @@ public class EngineTemp3DPair extends IScriptable {
         if IsDefined(this.oil) { this.oil.Release(); }
     }
 
-    public func SetPlacement(x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
+    public func SetPlacement(gauge: Int32, x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
         this.Ensure();
-        this.cool.SetPlacement(x, y, z, pitch, yaw, roll, scale);
-        this.oil.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+        if gauge == 0 {
+            this.cool.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+        } else {
+            this.oil.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+        }
     }
 
     public func TuneNeedle(px: Float, py: Float, start: Float, sweep: Float, len: Float, thick: Float) -> Void {

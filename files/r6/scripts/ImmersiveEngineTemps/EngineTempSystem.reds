@@ -61,9 +61,9 @@ public class EngineTempSystem extends ScriptableSystem {
         }
     }
 
-    public func Update3D(coolant: Float, oil: Float) -> Void {
+    public func Update3D(coolant: Float, oil: Float, coolOn: Bool, oilOn: Bool) -> Void {
         this.Ensure3D();
-        this.hud3d.Update(GetPlayer(GetGameInstance()).GetMountedVehicle(), coolant, oil);
+        this.hud3d.Update(GetPlayer(GetGameInstance()).GetMountedVehicle(), coolant, oil, coolOn, oilOn);
     }
 
 
@@ -73,9 +73,9 @@ public class EngineTempSystem extends ScriptableSystem {
         }
     }
 
-    public func Place3D(x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
+    public func Place3D(gauge: Int32, x: Float, y: Float, z: Float, pitch: Float, yaw: Float, roll: Float, scale: Float) -> Void {
         this.Ensure3D();
-        this.hud3d.SetPlacement(x, y, z, pitch, yaw, roll, scale);
+        this.hud3d.SetPlacement(gauge, x, y, z, pitch, yaw, roll, scale);
     }
 
     public func TuneNeedle(px: Float, py: Float, start: Float, sweep: Float, len: Float, thick: Float) -> Void {

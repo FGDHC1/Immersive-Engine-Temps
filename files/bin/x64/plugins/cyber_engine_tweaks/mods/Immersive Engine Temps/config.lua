@@ -32,12 +32,24 @@ return {
     hud2d_opacity = 1.0,
     hud2d_unit = "C",
 
+
     hud3d_enabled = true,
-    hud3d_x = 0.0,
-    hud3d_y = 0.0,
-    hud3d_z = 0.0,
-    hud3d_pitch = 0.0,
-    hud3d_yaw = 0.0,
-    hud3d_roll = 0.0,
-    hud3d_scale = 0.1
+
+    hud3d_cool_enabled = true,
+    hud3d_cool_x = 0.0,
+    hud3d_cool_y = 0.0,
+    hud3d_cool_z = 0.0,
+    hud3d_cool_pitch = 0.0,
+    hud3d_cool_yaw = 0.0,
+    hud3d_cool_roll = 0.0,
+    hud3d_cool_scale = 0.1,
+
+    hud3d_oil_enabled = true,
+    hud3d_oil_x = 0.15,
+    hud3d_oil_y = 0.0,
+    hud3d_oil_z = 0.0,
+    hud3d_oil_pitch = 0.0,
+    hud3d_oil_yaw = 0.0,
+    hud3d_oil_roll = 0.0,
+    hud3d_oil_scale = 0.1
 }

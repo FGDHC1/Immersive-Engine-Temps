@@ -20,13 +20,23 @@ local GLOBAL_ONLY = {
     hud3d_enabled = true,
 }
 local PLACEMENT = {
-    hud3d_x = true,
-    hud3d_y = true,
-    hud3d_z = true,
-    hud3d_pitch = true,
-    hud3d_yaw = true,
-    hud3d_roll = true,
-    hud3d_scale = true,
+    hud3d_cool_enabled = true,
+    hud3d_cool_x = true,
+    hud3d_cool_y = true,
+    hud3d_cool_z = true,
+    hud3d_cool_pitch = true,
+    hud3d_cool_yaw = true,
+    hud3d_cool_roll = true,
+    hud3d_cool_scale = true,
+
+    hud3d_oil_enabled = true,
+    hud3d_oil_x = true,
+    hud3d_oil_y = true,
+    hud3d_oil_z = true,
+    hud3d_oil_pitch = true,
+    hud3d_oil_yaw = true,
+    hud3d_oil_roll = true,
+    hud3d_oil_scale = true,
 }
 
 local function apply(target, src)
