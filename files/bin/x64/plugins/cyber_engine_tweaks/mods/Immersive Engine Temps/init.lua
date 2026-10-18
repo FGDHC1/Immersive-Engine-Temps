@@ -19,7 +19,8 @@ local DEBUG = {
     oil_heat = 0.0,
     oil_target = 0.0,
     oil_delta = 0.0,
-    max_rpm = 0
+    max_rpm = 0,
+    engineReadyness = 0.0   
 }
 
 
@@ -46,7 +47,7 @@ local editGauge = "cool"
 
 local function discardChanges()
     SETTINGS.resolve(vehKey)
-    SETTINGS.dirty = false
+    SETTINGS.clearDirty()
     hudDirty = true
     hud3dDirty = true
 end
@@ -144,7 +145,7 @@ registerForEvent("onUpdate", function(dt)
         discardChanges()
     end
 
-    local v = STATE.getOrCreate(vehID, ambientNow, CONFIG)
+    local v = STATE.getOrCreate(vehID, vehKey, ambientNow, CONFIG)
 
     local engineReadyness = TEMP.computeEngineReadyness(v, ambientNow, CONFIG)
 
@@ -201,42 +202,6 @@ registerForEvent("onDraw", function()
     if not isOverlayVisible then return end
     ImGui.Begin("Engine Temp Sim")
     if ImGui.BeginTabBar("##maintabs") then
-    
-        if ImGui.BeginTabItem("Debug") then
-            if DEBUG.mounted then
-                if ImGui.CollapsingHeader("Raw Data") then
-                    ImGui.Text(("Record: %s"):format(tostring(DEBUG.vehKey)))
-                    ImGui.Text(("Vehicle ID: %s"):format(tostring(DEBUG.vehID)))
-                    ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
-                    ImGui.Text(("RPM: %.0f"):format(DEBUG.rpm))
-                    ImGui.Text(("Game hour: %.2f"):format(DEBUG.hour))
-                end
-
-                ImGui.Separator()
-                if ImGui.CollapsingHeader(("Derived Values")) then
-                    ImGui.Text(("Ambient now: %.1f C"):format(DEBUG.ambientNow))
-                    ImGui.Text(("Max RPM learned: %.0f"):format(DEBUG.max_rpm))
-                    ImGui.Text(("Coolant Heat: %.1f"):format(DEBUG.coolant_heat))
-                    ImGui.Text(("Coolant Cool: %.1f"):format(DEBUG.coolant_cool))
-                    ImGui.Text(("Coolant Target: %.1f"):format(DEBUG.coolant_target))
-                    ImGui.Text(("Coolant Delta: %.1f"):format(DEBUG.coolant_delta))
-                    ImGui.Text(("Oil Heat: %.1f"):format(DEBUG.oil_heat))
-                    ImGui.Text(("Oil Target: %.1f"):format(DEBUG.oil_target))
-                    ImGui.Text(("Oil Delta: %.1f"):format(DEBUG.oil_delta))
-                end
-
-                ImGui.Separator()
-                if ImGui.CollapsingHeader(("Simulation")) then
-                    ImGui.Text(("Coolant temp: %.1f C"):format(DEBUG.coolant_temp))
-                    ImGui.Text(("Oil temp: %.1f C"):format(DEBUG.oil_temp))
-                    ImGui.Text(("Engine Ready: %.0f %%"):format(DEBUG.engineReadyness * 100))
-                end
-            else
-                ImGui.Text("Not mounted.")
-            end
-            ImGui.EndTabItem()
-        end
-
         if ImGui.BeginTabItem("Settings") then
             if DEBUG.mounted then
                 local used
@@ -260,9 +225,9 @@ registerForEvent("onDraw", function()
                 CONFIG.oil_offset_c, used = ImGui.SliderFloat("Oil offset C", CONFIG.oil_offset_c, 0, 40)
                 changed = changed or used
 
-                if changed then SETTINGS.dirty = true end
+                if changed then SETTINGS.dirty.sim = true end
 
-                if SETTINGS.dirty then
+                if SETTINGS.dirty.sim then
                     ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
                 else
                     ImGui.Text("Saved")
@@ -282,7 +247,7 @@ registerForEvent("onDraw", function()
                     SETTINGS.clearVehicle(vehKey)
                     discardChanges()
                 end
-                if SETTINGS.dirty then
+                if SETTINGS.dirty.sim then
                     ImGui.SameLine()
                     if ImGui.Button("Discard Changes##settings") then
                         discardChanges()
@@ -364,11 +329,11 @@ registerForEvent("onDraw", function()
             end
 
             if changed then
-                SETTINGS.dirty = true
+                SETTINGS.dirty.hud2d = true
                 hudDirty = true
             end
 
-            if SETTINGS.dirty then
+            if SETTINGS.dirty.hud2d then
                 ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
             else
                 ImGui.Text("Saved")
@@ -385,7 +350,7 @@ registerForEvent("onDraw", function()
                 SETTINGS.saveGlobal()
             end
 
-            if SETTINGS.dirty then
+            if SETTINGS.dirty.hud2d then
                 ImGui.SameLine()
                 if ImGui.Button("Discard Changes##hud2d") then
                     discardChanges()
@@ -398,7 +363,7 @@ registerForEvent("onDraw", function()
         if ImGui.BeginTabItem("3D HUD") then
             local used
             CONFIG.hud3d_enabled, used = ImGui.Checkbox("3D HUD Enabled", CONFIG.hud3d_enabled)
-            if used then SETTINGS.dirty = true end
+            if used then SETTINGS.dirty.hud3d = true end
             if DEBUG.mounted then
                 local changed = false
                 local prefix = "hud3d_" .. editGauge .. "_"
@@ -421,26 +386,31 @@ registerForEvent("onDraw", function()
 
                 CONFIG[prefix .. "x"], used = ImGui.DragFloat("X (m)", CONFIG[prefix .. "x"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
+
                 CONFIG[prefix .. "y"], used = ImGui.DragFloat("Y (m)", CONFIG[prefix .. "y"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
+                
                 CONFIG[prefix .. "z"], used = ImGui.DragFloat("Z (m)", CONFIG[prefix .. "z"], 0.005, -3.0, 3.0, "%.3f")
                 changed = changed or used
 
                 CONFIG[prefix .. "pitch"], used = ImGui.DragFloat("Pitch", CONFIG[prefix .. "pitch"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
+                
                 CONFIG[prefix .. "yaw"], used = ImGui.DragFloat("Yaw", CONFIG[prefix .. "yaw"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
+                
                 CONFIG[prefix .. "roll"], used = ImGui.DragFloat("Roll", CONFIG[prefix .. "roll"], 0.5, -180.0, 180.0, "%.1f")
                 changed = changed or used
+                
                 CONFIG[prefix .. "scale"], used = ImGui.DragFloat("Scale", CONFIG[prefix .. "scale"], 0.0005, 0.001, 0.30, "%.4f")
                 changed = changed or used
 
                 if changed then
-                    SETTINGS.dirty = true
+                    SETTINGS.dirty.hud3d = true
                     hud3dDirty = true
                 end
 
-                if SETTINGS.dirty then
+                if SETTINGS.dirty.hud3d then
                     ImGui.TextColored(1.0, 0.6, 0.1, 1.0, "THESE VALUES HAVEN'T YET BEEN SAVED")
                 else
                     ImGui.Text("Saved")
@@ -451,7 +421,7 @@ registerForEvent("onDraw", function()
                 if ImGui.Button("Save Global##hud3d") then
                    SETTINGS.saveGlobal()
                 end
-                if SETTINGS.dirty then
+                if SETTINGS.dirty.hud3d then
                     ImGui.SameLine()
                     if ImGui.Button("Discard Changes##hud3d") then
                         discardChanges()
@@ -487,7 +457,42 @@ registerForEvent("onDraw", function()
                     end
                 end
             end
-            ImGui.EndTabItem()        
+            ImGui.EndTabItem()
+        end
+            
+        if ImGui.BeginTabItem("Debug") then
+            if DEBUG.mounted then
+                if ImGui.CollapsingHeader("Raw Data") then
+                    ImGui.Text(("Record: %s"):format(tostring(DEBUG.vehKey)))
+                    ImGui.Text(("Vehicle ID: %s"):format(tostring(DEBUG.vehID)))
+                    ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
+                    ImGui.Text(("RPM: %.0f"):format(DEBUG.rpm))
+                    ImGui.Text(("Game hour: %.2f"):format(DEBUG.hour))
+                end
+
+                ImGui.Separator()
+                if ImGui.CollapsingHeader(("Derived Values")) then
+                    ImGui.Text(("Ambient now: %.1f C"):format(DEBUG.ambientNow))
+                    ImGui.Text(("Max RPM learned: %.0f"):format(DEBUG.max_rpm))
+                    ImGui.Text(("Coolant Heat: %.1f"):format(DEBUG.coolant_heat))
+                    ImGui.Text(("Coolant Cool: %.1f"):format(DEBUG.coolant_cool))
+                    ImGui.Text(("Coolant Target: %.1f"):format(DEBUG.coolant_target))
+                    ImGui.Text(("Coolant Delta: %.1f"):format(DEBUG.coolant_delta))
+                    ImGui.Text(("Oil Heat: %.1f"):format(DEBUG.oil_heat))
+                    ImGui.Text(("Oil Target: %.1f"):format(DEBUG.oil_target))
+                    ImGui.Text(("Oil Delta: %.1f"):format(DEBUG.oil_delta))
+                end
+
+                ImGui.Separator()
+                if ImGui.CollapsingHeader(("Simulation")) then
+                    ImGui.Text(("Coolant temp: %.1f C"):format(DEBUG.coolant_temp))
+                    ImGui.Text(("Oil temp: %.1f C"):format(DEBUG.oil_temp))
+                    ImGui.Text(("Engine Ready: %.0f %%"):format(DEBUG.engineReadyness * 100))
+                end
+            else
+                ImGui.Text("Not mounted.")
+            end
+            ImGui.EndTabItem()
         end
         ImGui.EndTabBar()
     end

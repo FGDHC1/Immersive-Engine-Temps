@@ -1,5 +1,5 @@
 return {
-    idle_rpm = 850,
+    idle_rpm = 800,
     default_max_rpm = 6000,
 
     cool_speed_ref_kmh = 160,
@@ -39,7 +39,7 @@ return {
     hud3d_cool_x = 0.0,
     hud3d_cool_y = 0.0,
     hud3d_cool_z = 0.0,
-    hud3d_cool_pitch = 0.0,
+    hud3d_cool_pitch = 90,
     hud3d_cool_yaw = 0.0,
     hud3d_cool_roll = 0.0,
     hud3d_cool_scale = 0.1,
@@ -48,7 +48,7 @@ return {
     hud3d_oil_x = 0.15,
     hud3d_oil_y = 0.0,
     hud3d_oil_z = 0.0,
-    hud3d_oil_pitch = 0.0,
+    hud3d_oil_pitch = 90,
     hud3d_oil_yaw = 0.0,
     hud3d_oil_roll = 0.0,
     hud3d_oil_scale = 0.1

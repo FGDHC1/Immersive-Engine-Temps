@@ -10,6 +10,12 @@ public class EngineHUD extends IScriptable {
   private let coolSegs: array<wref<inkImage>>;
   private let oilSegs: array<wref<inkImage>>;
   private let useF: Bool = false;
+  private let maxRpm: Float = 8000.0;
+  private let minTemp: Float = 20.0;
+  private let maxTemp: Float = 120.0;
+  private let warnTemp: Float = 100.0;
+  private let critTemp: Float = 115.0;
+  private let segCount: Int32 = 16;
 
   public func ApplyConfig(x: Float, y: Float, scale: Float, opacity: Float, unitF: Bool) -> Void {
     this.useF = unitF;
@@ -32,13 +38,13 @@ public class EngineHUD extends IScriptable {
   }
 
   private func ColorForTemp(temp: Float) -> HDRColor {
-    if temp >= 115.0 { return HDRColor(1.0, 0.15, 0.1, 1.0); }
-    if temp >= 100.0 { return HDRColor(1.0, 0.75, 0.1, 1.0); }
+    if temp >= this.critTemp { return HDRColor(1.0, 0.15, 0.1, 1.0); }
+    if temp >= this.warnTemp { return HDRColor(1.0, 0.75, 0.1, 1.0); }
     return HDRColor(0.3, 0.9, 0.95, 1.0);
   }
 
   private func UpdateArc(segs: array<wref<inkImage>>, temp: Float) -> Void {
-    let frac: Float = (temp - 20.0) / 100.0;
+    let frac: Float = (temp - this.minTemp) / (this.maxTemp - this.minTemp);
     if frac < 0.0 { frac = 0.0; }
     if frac > 1.0 { frac = 1.0; }
 
@@ -85,12 +91,11 @@ public class EngineHUD extends IScriptable {
     face.SetAnchorPoint(Vector2(0.5, 0.5));
     face.Reparent(dial);
 
-    let segCount: Int32 = 16;
     let segRadius: Float = 235.0;
 
     let i: Int32 = 0;
-    while i < segCount {
-      let t: Float = Cast<Float>(i) / Cast<Float>(segCount - 1);
+    while i < self.segCount {
+      let t: Float = Cast<Float>(i) / Cast<Float>(self.segCount - 1);
       let arcOffset: Float = 55.0;
       let angC: Float = 270.0 - arcOffset - t * 70.0;
       let segC = new inkImage();
@@ -191,7 +196,7 @@ public class EngineHUD extends IScriptable {
     this.coolantText.SetText("Cool: " + FloatToStringPrec(cShown, 0) + suffix);
     this.oilText.SetText("Oil: " + FloatToStringPrec(oShown, 0) + suffix);
 
-    let frac: Float = Cast<Float>(rpm) / 8000.0;
+    let frac: Float = Cast<Float>(rpm) / this.maxRpm;
     if frac > 1.0 { frac = 1.0; }
     this.needle.SetRotation(-135.0 + frac * 270.0);
 

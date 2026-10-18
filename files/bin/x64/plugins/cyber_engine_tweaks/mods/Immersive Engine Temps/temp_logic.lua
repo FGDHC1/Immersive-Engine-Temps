@@ -55,11 +55,7 @@ end
 
 function T.tickOil(v, kmh, rpm, dt, CFG)
     -- normalize RPM to 0-1 range
-    local rpmNorm = clamp01((rpm - CFG.idle_rpm) / (v.max_rpm - CFG.idle_rpm))
-
-    -- No dedicated oil cooler: in Night City, corpos and gangs cut every corner
-    -- that isn't survival-critical this part gets skipped as long as the
-    -- regular coolant loop barely keeps up.
+    local rpmNorm = clamp01((rpm - CFG.idle_rpm) / math.max(v.max_rpm - CFG.idle_rpm, 1))
 
     -- compute target temperature
     local heat = rpmNorm * CFG.oil_self_heat_max_c

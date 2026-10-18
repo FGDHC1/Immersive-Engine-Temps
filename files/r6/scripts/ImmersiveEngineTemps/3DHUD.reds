@@ -13,8 +13,8 @@ public class EngineTemp3DHud extends IScriptable {
     private let yaw: Float;
     private let roll: Float;
     private let scale: Float = 0.1;
-    private let placementDirty: Bool;
     private let gaugeStage: Int32;
+    private let gauge: wref<inkImage>;
     private let needle: wref<inkImage>;
     private let startAngle: Float = 0.0;
     private let sweep: Float = 180.0;
@@ -24,6 +24,14 @@ public class EngineTemp3DHud extends IScriptable {
     private let pivotY: Float = 0.1;
     private let needleLen: Float = 0.5;
     private let needleThick: Float = 1.0;
+    private let debugLog: Bool = false;
+
+
+    private func Dbg(msg: String) -> Void {
+        if this.debugLog {
+            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] " + msg);
+        }
+    }
 
     
     public func Update(car: wref<VehicleObject>, temp: Float) -> Void {
@@ -53,15 +61,9 @@ public class EngineTemp3DHud extends IScriptable {
         this.yaw = yaw;
         this.roll = roll;
         this.scale = scale;
-        this.placementDirty = true;
     }
 
     private func Spawn(car: wref<VehicleObject>) -> Void {
-        let depot = GameInstance.GetResourceDepot();
-        if !depot.ResourceExists(r"immersiveenginetemps\\hud3d\\host.ent") {
-            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] host.ent NOT FOUND");
-            return;
-        }
         let spec = new StaticEntitySpec();
 
         spec.templatePath = r"immersiveenginetemps\\hud3d\\host.ent";
@@ -72,12 +74,11 @@ public class EngineTemp3DHud extends IScriptable {
         this.hostID = GameInstance.GetStaticEntitySystem().SpawnEntity(spec);
         this.carID = car.GetEntityID();
         this.bound = false;
-        this.placementDirty = true;
 
         if EntityID.IsDefined(this.hostID) {
-            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D host spawned");
+            this.Dbg("3D host spawned");
         } else {
-            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] SpawnEntity returned empty ID");
+            this.Dbg("SpawnEntity returned empty ID");
         }
     }
 
@@ -90,7 +91,7 @@ public class EngineTemp3DHud extends IScriptable {
 
         EntityGameInterface.BindToComponent(host.GetEntity(), car.GetEntity(), chassis.name, n"", true);
         this.bound = true;
-        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D host bound to chassis");
+        this.Dbg("3D host bound to chassis");
     }
 
     private func ApplyPlacement() -> Void {
@@ -105,13 +106,12 @@ public class EngineTemp3DHud extends IScriptable {
 
         plate.SetLocalTransform(Vector4(this.x, this.y, this.z, 1.0), EulerAngles.ToQuat(rot));
         plate.visualScale = Vector3(this.scale, this.scale, this.scale);
-        this.placementDirty = false;
     }
 
     public func Release() -> Void {
         if EntityID.IsDefined(this.hostID) {
             GameInstance.GetStaticEntitySystem().DespawnEntity(this.hostID);
-            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D host released");
+            this.Dbg("3D host released");
         }
         let empty: EntityID;
         this.hostID = empty;
@@ -121,8 +121,6 @@ public class EngineTemp3DHud extends IScriptable {
         this.gaugeStage = 0;
         this.needle = null;
     }
-
-    private let gauge: wref<inkImage>;
 
     private func TryBuildGauge() -> Void {
         if IsDefined(this.gauge) { return; }
@@ -153,7 +151,7 @@ public class EngineTemp3DHud extends IScriptable {
 
         let needle = new inkImage();
         let rs = root.GetSize();
-        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] root size " + FloatToString(rs.X) + " x " + FloatToString(rs.Y));
+        this.Dbg("root size " + FloatToString(rs.X) + " x " + FloatToString(rs.Y));
         
         needle.SetAtlasResource(r"immersiveenginetemps\\hud3d\\iet_gauges3d.inkatlas");
         needle.SetTexturePart(n"temp_gauge_needle");
@@ -167,12 +165,12 @@ public class EngineTemp3DHud extends IScriptable {
 
         this.gauge = img;
         this.needle = needle;
-        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] Gauge Created");
+        this.Dbg("Gauge Created");
     }
     private func Stage(stage: Int32, msg: String) -> Void {
         if this.gaugeStage != stage {
             this.gaugeStage = stage;
-            LogChannel(n"DEBUG", "[ImmersiveEngineTemps] gauge stage " + IntToString(stage) + ": " + msg);
+            this.Dbg("gauge stage " + IntToString(stage) + ": " + msg);
 
         }
     }
@@ -213,7 +211,6 @@ public class EngineTemp3DService extends ScriptableService {
         plate.name = n"iet_plate";
         plate.mesh *= r"immersiveenginetemps\\hud3d\\iet_plate.mesh";
         plate.meshAppearance = n"default";
-        plate.visualScale = Vector3(0.1, 0.1, 0.1);
         plate.castShadows = shadowsShadowCastingMode.Never;
         plate.renderingPlane = ERenderingPlane.RPl_Scene;
         plate.objectTypeID = ERenderObjectType.ROT_Vehicle;
@@ -234,8 +231,6 @@ public class EngineTemp3DService extends ScriptableService {
         screen.sceneWidgetProperties.projectionPlaneSize.Y = 1.0;
         
         host.AddComponent(screen);
-
-        LogChannel(n"DEBUG", "[ImmersiveEngineTemps] 3D plate added");
     }
 }
 public class EngineTemp3DPair extends IScriptable {

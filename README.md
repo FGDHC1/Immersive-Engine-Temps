@@ -30,6 +30,12 @@ Realistic warm-up instead of an instantly "ready" engine:
 - In-game 3D display via Redscript
 - Engine readiness value affects the vehicle itself (less power until up to operating temperature)
 
+## Requirements
+
+- [Cyber Engine Tweaks](https://github.com/maximegmd/CyberEngineTweaks)
+- [redscript](https://github.com/jac3km4/redscript)
+- [Codeware](https://github.com/psiberx/cp2077-codeware)
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

@@ -4,63 +4,63 @@
 ## Weitere Ideen
 - [ ] Temperature Persistence over game restart
 - [ ] Cars with a gearbox that is always high reving, are likely to have higher Temperatures. I have to investigate that a little further
-- [ ] Ambient temperature should influence cooling (its minimal but i thik its a nice detail)
 - [ ] Optimising the unmounted logic
 - [ ] Optimising the ambient temperature logic
 - [ ] Maybe a clean up logic, that cleans up the vehicles that returned to ambient temperature
 - [ ] Implement mod config edit, maybe via Native Settings UI
-- [ ] Implement in 2d hud that it dissapears when in wheapon wheel
-- [ ] Timeskip detection
-- [ ] Implement HUD config edit
+- [x] Timeskip detection
+- [x] Implement HUD config edit
 - [ ] UI Shows up delayed at start
 - [ ] 3D HUD Dials make full turn as startup animation
-
+- [ ] Make option available to enable 2d Hud only in 3rd person
+- [x] Max RPM beim ersten Auto-Eintrag aus der TweakDB lesen (lernt danach weiter)
 ## Phase 3 – 3D-HUD (aktuell)
-- [ ] Eigener 3D-Atlas mit Gauge-Texturen (Style A, Style B, Nadel)
-- [ ] Platzhalter-Ziffernblatt im 3D durch eigene Gauge ersetzen
+- [x] Eigener 3D-Atlas mit Gauge-Texturen
+- [x] Platzhalter-Ziffernblatt im 3D durch eigene Gauge ersetzen
 - [ ] Helligkeits-Slider (Multiplikator auf ink-Farben, Basis EmissiveEV)
-- [ ] Nadel drehen + Umschalten Style A/B
+- [x] Nadel drehen
 - [ ] Option: Nadel nach Temperatur einfärben
-- [ ] Eigene .inkwidget statt CrystalCoat-Widget
-- [ ] Pitch 90 als Default in config (Plane liegt flach)
+- [x] Pitch 90 als Default in config (Plane liegt flach)
+- [ ] Operating temperaturs nochmals überarbeiten
 
 
 ## Cleanup / Optimierung 
 
 ### Lua
-- [ ] `S.import` wird nicht mehr genutzt (Presets ersetzen es) → entfernen
-- [ ] `dirty` ist gemeinsam für Sim- und HUD-Tab → pro Tab trennen
-- [ ] "Save To this Car" setzt dirty zurück, obwohl HUD-Änderungen nicht gespeichert werden
-- [ ] `DEBUG.engineReadyness` fehlt in der DEBUG-Starttabelle
-- [ ] Funktionsname `loadVehicleValues` → `loadSimValues` (lädt auch Presets)
-- [ ] Scale parameter genauer machen, ist sehr nervig mit den grossen schritten
+- [x] `S.import` wird nicht mehr genutzt (Presets ersetzen es) → entfernen
+- [x] `dirty` ist gemeinsam für Sim- und HUD-Tab → pro Tab trennen
+- [x] "Save To this Car" setzt dirty zurück, obwohl HUD-Änderungen nicht gespeichert werden
+- [x] `DEBUG.engineReadyness` fehlt in der DEBUG-Starttabelle
+- [x] Funktionsname `loadVehicleValues` → `loadSimValues` (lädt auch Presets)
+- [x] Scale parameter genauer machen, ist sehr nervig mit den grossen schritten
 
 ### Redscript 2D
-- [ ] Fest verdrahtete Werte in Config auslagern: 8000 RPM, Temp-Bereich 20–120, segCount 16
-- [ ] `ColorForTemp`-Schwellen (100 / 115) konfigurierbar machen
-- [ ] EngineTempSystem aus 2DHUD.reds in eigene System.reds verschieben
+- [x] Fest verdrahtete Werte in Config auslagern: 8000 RPM, Temp-Bereich 20–120, segCount 16
+- [x] `ColorForTemp`-Schwellen (100 / 115) konfigurierbar machen
+- [x] EngineTempSystem aus 2DHUD.reds in eigene System.reds verschieben
 
 ### Redscript 3D
-- [ ] Diagnose-Logs (`ResourceExists`, "NOT FOUND") nach dem Test entfernen oder leiser machen
-- [ ] Stage-Logs in `TryBuildGauge` leiser machen oder hinter Debug-Schalter
-- [ ] `placementDirty` entfernen (wird nicht mehr gelesen)
-- [ ] Feld `gauge` nach oben zu den anderen Feldern
-- [ ] `visualScale` in `OnHostAssemble` entfernen (wird von `ApplyPlacement` überschrieben)
+- [x] Diagnose-Logs (`ResourceExists`, "NOT FOUND") nach dem Test entfernen oder leiser machen
+- [x] Stage-Logs in `TryBuildGauge` leiser machen oder hinter Debug-Schalter
+- [x] `placementDirty` entfernen (wird nicht mehr gelesen)
+- [x] Feld `gauge` nach oben zu den anderen Feldern
+- [x] `visualScale` in `OnHostAssemble` entfernen (wird von `ApplyPlacement` überschrieben)
 
 ### Assets (WolvenKit)
 - [ ] `parameters[1]` in `iet_plate.mesh` prüfen
 
 ### Repo
-- [ ] Zeilenenden vereinheitlichen (`.gitattributes`)
-- [ ] README: Codeware als Abhängigkeit eintragen
+- [x] README: Codeware als Abhängigkeit eintragen
 
 
 
 ### Nicht gemacht
 - ~~Engine is warm if vehicle is called - I think its not rlly possible for me, i have to get more knoledge over the vehicle system.~~
+- [ ] ~~Ambient temperature should influence cooling (its minimal but i thik its a nice detail)~~ (keinen Bock)
+- [ ] ~~Implement in 2d hud that it dissapears when in wheapon wheel ~~ (hab keinen Bock)
+- [ ] ~~Zeilenenden vereinheitlichen (`.gitattributes`)~~ (nicht nötig)
 
 
-## Zusammengefasste Werte & Formeln (This is a draft of the Formulas and Logics)
 
 **Konstanten**
 ```

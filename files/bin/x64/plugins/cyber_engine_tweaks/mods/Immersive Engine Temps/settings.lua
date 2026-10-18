@@ -5,7 +5,7 @@ local S = {
     global   = {}, -- changes from defaults
     vehicles = {},
     presets  = {},
-    dirty    = false, -- unsaved changes?
+    dirty    = { sim = false, hud2d = false, hud3d = false },
 }
 
 local SAVE_FILE = "settings.json"
@@ -38,6 +38,12 @@ local PLACEMENT = {
     hud3d_oil_roll = true,
     hud3d_oil_scale = true,
 }
+
+function S.clearDirty()
+    S.dirty.sim = false
+    S.dirty.hud2d = false
+    S.dirty.hud3d = false
+end
 
 local function apply(target, src)
     if type(src) ~= "table" then return end
@@ -77,7 +83,7 @@ function S.load()
     end
 
     S.resolve(nil)
-    S.dirty = false
+    S.clearDirty()
 end
 
 function S.write()
@@ -108,7 +114,7 @@ end
 function S.saveGlobal()
     S.global = diff(DEFAULTS)
     S.write()
-    S.dirty = false
+    S.clearDirty()    
 end
 
 function S.saveVehicle(key, name)
@@ -120,7 +126,8 @@ function S.saveVehicle(key, name)
 
     S.vehicles[key] = { name = name or key, values = diff(base, true), }
     S.write()
-    S.dirty = false
+    S.dirty.sim = false
+    S.dirty.hud3d = false
 end
 
 function S.clearVehicle(key)
@@ -129,7 +136,7 @@ function S.clearVehicle(key)
     S.write()
 end
 
-local function loadVehicleValues(values)
+local function loadSimValues(values)
         for k, v in pairs(DEFAULTS) do
         if not GLOBAL_ONLY[k] and not PLACEMENT[k] then
             if S.global[k] ~= nil then
@@ -140,14 +147,7 @@ local function loadVehicleValues(values)
         end
     end
     apply(S.values, values)
-    S.dirty = true
-end
-
-
-function S.import(key)
-    local entry = S.vehicles[key]
-    if not entry then return end
-    loadVehicleValues(entry.values)
+    S.dirty.sim = true
 end
 
 function S.savePreset(name)
@@ -165,7 +165,7 @@ end
 function S.loadPreset(name)
     local entry = S.presets[name]
     if not entry then return end
-    loadVehicleValues(entry.values)
+    loadSimValues(entry.values)
 end
 
 function S.deletePreset(name)
@@ -179,7 +179,7 @@ function S.resetHud()
     for k in pairs(GLOBAL_ONLY) do
         S.values[k] = DEFAULTS[k]
     end
-    S.dirty = true
+    S.dirty.hud2d = true
 end
 
 return S
