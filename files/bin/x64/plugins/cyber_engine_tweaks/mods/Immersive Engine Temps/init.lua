@@ -45,6 +45,9 @@ local NEEDLE_DBG = { px = 0.95, py = 0.1, start = 0.0, sweep = 180.0, len = 1.0,
 
 local editGauge = "cool"
 
+local mountedFor = 0.0
+local animTime = nil
+
 local function discardChanges()
     SETTINGS.resolve(vehKey)
     SETTINGS.clearDirty()
@@ -66,6 +69,28 @@ local function getVehKey(veh)
     local key = rec.value
     if key == nil or key == "" then key = tostring(rec) end
     return key
+end
+
+-- Must match the ranges in 2DHUD.reds / 3DHUD.reds !!!
+local GAUGE = {
+    rpm  = { 0, 8000 },
+    cool = { 40, 130 },
+    oil  = { 50, 150 },
+}
+
+local function ease(x)
+    return x * x * (3 - 2 * x)
+end
+
+local function animValue(liveVal, minV, maxV, t, leg)
+    if t < leg then                                   -- off -> max
+        return minV + (maxV - minV) * ease(t / leg)
+    elseif t < 2 * leg then                           -- max -> off
+        return maxV - (maxV - minV) * ease((t - leg) / leg)
+    elseif t < 3 * leg then                           -- off -> live value
+        return minV + (liveVal - minV) * ease((t - 2 * leg) / leg)
+    end
+    return liveVal                                    -- animation finished
 end
 
 registerForEvent("onOverlayOpen", function()
@@ -116,6 +141,8 @@ registerForEvent("onUpdate", function(dt)
     lastSec = nowSec
 
     if not veh then
+        mountedFor = 0.0
+        animTime = nil
         DEBUG.mounted = false
         STATE.tickAllUnmounted(dt, CONFIG, ambientNow, skipID)
         local sys = getSystem()
@@ -172,14 +199,43 @@ registerForEvent("onUpdate", function(dt)
     DEBUG.max_rpm = v.max_rpm
     DEBUG.engineReadyness = engineReadyness
 
+    mountedFor = mountedFor + dt
+    local hudVisible = mountedFor >= CONFIG.hud_delay_s
+
+    local okEng, engineOn = pcall(function() return veh:IsEngineTurnedOn() end)
+    if not okEng then engineOn = true end
+    DEBUG.engineOn = engineOn
+
+    -- start the sweep once the HUD is visible and the engine runs
+    if hudVisible and engineOn and animTime == nil then
+        animTime = 0.0
+    end
+    if animTime and animTime < 3 * CONFIG.hud_sweep_s then
+        animTime = animTime + dt
+    end
+
+    local showRpm, showCool, showOil
+    if animTime == nil then
+        -- before engine start: needles rest in "off" position
+        showRpm, showCool, showOil = GAUGE.rpm[1], GAUGE.cool[1], GAUGE.oil[1]
+    else
+        local leg = CONFIG.hud_sweep_s
+        showRpm  = animValue(rpm,            GAUGE.rpm[1],  GAUGE.rpm[2],  animTime, leg)
+        showCool = animValue(v.coolant_temp, GAUGE.cool[1], GAUGE.cool[2], animTime, leg)
+        showOil  = animValue(v.oil_temp,     GAUGE.oil[1],  GAUGE.oil[2],  animTime, leg)
+    end
+
     local sys = getSystem()
-    if sys then
+    if sys and not hudVisible then
+        sys:HideHUD()
+        sys:Hide3D()
+    elseif sys then
         if CONFIG.hud2d_enabled then
             if hudDirty then
                 sys:PushConfig(CONFIG.hud2d_x, CONFIG.hud2d_y, CONFIG.hud2d_scale, CONFIG.hud2d_opacity, CONFIG.hud2d_unit == "F")
                 hudDirty = false
             end
-            sys:PushValues(math.floor(rpm), v.coolant_temp, v.oil_temp)
+            sys:PushValues(math.floor(showRpm), showCool, showOil)
         else
             sys:HideHUD()
         end
@@ -189,9 +245,9 @@ registerForEvent("onUpdate", function(dt)
                 sys:Place3D(1, CONFIG.hud3d_oil_x, CONFIG.hud3d_oil_y, CONFIG.hud3d_oil_z, CONFIG.hud3d_oil_pitch, CONFIG.hud3d_oil_yaw, CONFIG.hud3d_oil_roll, CONFIG.hud3d_oil_scale)
                 hud3dDirty = false
             end
-            local temp3d = v.coolant_temp
+            local temp3d = showCool
             if NEEDLE_DBG.override then temp3d = NEEDLE_DBG.temp end
-            sys:Update3D(temp3d, v.oil_temp, CONFIG.hud3d_cool_enabled, CONFIG.hud3d_oil_enabled)
+            sys:Update3D(temp3d, showOil, CONFIG.hud3d_cool_enabled, CONFIG.hud3d_oil_enabled)
         else
             sys:Hide3D()
         end
@@ -468,6 +524,8 @@ registerForEvent("onDraw", function()
                     ImGui.Text(("Speed: %.1f km/h"):format(DEBUG.kmh))
                     ImGui.Text(("RPM: %.0f"):format(DEBUG.rpm))
                     ImGui.Text(("Game hour: %.2f"):format(DEBUG.hour))
+                    ImGui.Text(("Engine on: %s"):format(tostring(DEBUG.engineOn)))
+                    ImGui.Text(("Anim time: %s"):format(tostring(animTime)))
                 end
 
                 ImGui.Separator()

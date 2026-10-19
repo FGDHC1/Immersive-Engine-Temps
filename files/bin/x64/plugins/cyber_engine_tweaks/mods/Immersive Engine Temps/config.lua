@@ -25,6 +25,9 @@ return {
 
     timeskipThreshold_s = 60,
 
+    hud_delay_s = 0.8,
+    hud_sweep_s = 1.0,
+
     hud2d_enabled = true,
     hud2d_x = -1350.0,
     hud2d_y = -333.0,
