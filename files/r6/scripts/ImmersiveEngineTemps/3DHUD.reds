@@ -33,6 +33,10 @@ public class EngineTemp3DHud extends IScriptable {
         }
     }
 
+    public func SetRange(minT: Float, maxT: Float) -> Void {
+        this.mintemp = minT;
+        this.maxtemp = maxT;
+    }
     
     public func Update(car: wref<VehicleObject>, temp: Float) -> Void {
         if !IsDefined(car) { return; }
@@ -238,8 +242,8 @@ public class EngineTemp3DPair extends IScriptable {
     private let oil: ref<EngineTemp3DHud>;
 
     private func Ensure() -> Void {
-        if !IsDefined(this.cool) { this.cool = new EngineTemp3DHud(); }
-        if !IsDefined(this.oil) { this.oil = new EngineTemp3DHud(); }
+        if !IsDefined(this.cool) { this.cool = new EngineTemp3DHud(); this.cool.SetRange(40.0, 130.0); }
+        if !IsDefined(this.oil) { this.oil = new EngineTemp3DHud(); this.oil.SetRange(50.0, 150.0); }
     }
 
     public func Update(car: wref<VehicleObject>, coolant: Float, oil: Float, coolOn: Bool, oilOn: Bool) -> Void {

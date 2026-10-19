@@ -11,11 +11,18 @@ public class EngineHUD extends IScriptable {
   private let oilSegs: array<wref<inkImage>>;
   private let useF: Bool = false;
   private let maxRpm: Float = 8000.0;
-  private let minTemp: Float = 20.0;
-  private let maxTemp: Float = 120.0;
-  private let warnTemp: Float = 100.0;
-  private let critTemp: Float = 115.0;
   private let segCount: Int32 = 16;
+
+  private let coolMin: Float = 40.0;
+  private let coolMax: Float = 130.0;
+  private let coolWarn: Float = 110.0;
+  private let coolCrit: Float = 118.0;
+
+  private let oilMin: Float = 50.0;
+  private let oilMax: Float = 150.0;
+  private let oilWarn: Float = 135.0;
+  private let oilCrit: Float = 150.0;
+
 
   public func ApplyConfig(x: Float, y: Float, scale: Float, opacity: Float, unitF: Bool) -> Void {
     this.useF = unitF;
@@ -37,19 +44,19 @@ public class EngineHUD extends IScriptable {
     return Vector2(r * CosF(rad), -r * SinF(rad));
   }
 
-  private func ColorForTemp(temp: Float) -> HDRColor {
-    if temp >= this.critTemp { return HDRColor(1.0, 0.15, 0.1, 1.0); }
-    if temp >= this.warnTemp { return HDRColor(1.0, 0.75, 0.1, 1.0); }
+  private func ColorForTemp(temp: Float, warn: Float, crit: Float) -> HDRColor {
+    if temp >= crit { return HDRColor(1.0, 0.15, 0.1, 1.0); }
+    if temp >= warn { return HDRColor(1.0, 0.75, 0.1, 1.0); }
     return HDRColor(0.3, 0.9, 0.95, 1.0);
   }
 
-  private func UpdateArc(segs: array<wref<inkImage>>, temp: Float) -> Void {
-    let frac: Float = (temp - this.minTemp) / (this.maxTemp - this.minTemp);
+  private func UpdateArc(segs: array<wref<inkImage>>, temp: Float, minT: Float, maxT: Float, warn: Float, crit: Float) -> Void {
+    let frac: Float = (temp - minT) / (maxT - minT);
     if frac < 0.0 { frac = 0.0; }
     if frac > 1.0 { frac = 1.0; }
 
     let lit: Int32 = Cast<Int32>(frac * Cast<Float>(ArraySize(segs)));
-    let col: HDRColor = this.ColorForTemp(temp);
+    let col: HDRColor = this.ColorForTemp(temp, warn, crit);
 
     let i: Int32 = 0;
     while i < ArraySize(segs) {
@@ -200,7 +207,7 @@ public class EngineHUD extends IScriptable {
     if frac > 1.0 { frac = 1.0; }
     this.needle.SetRotation(-135.0 + frac * 270.0);
 
-    this.UpdateArc(this.coolSegs, coolant);
-    this.UpdateArc(this.oilSegs, oil);
+    this.UpdateArc(this.coolSegs, coolant, this.coolMin, this.coolMax, this.coolWarn, this.coolCrit);
+    this.UpdateArc(this.oilSegs, oil, this.oilMin, this.oilMax, this.oilWarn, this.oilCrit);
   }
 }

@@ -5,7 +5,7 @@ return {
     cool_speed_ref_kmh = 160,
     coolant_setpoint_c = 90,
 
-    coolant_heat_max_c = 25,
+    coolant_heat_max_c = 30,
     coolant_cool_max_c = 8,
 
     k_coolant = 0.020,

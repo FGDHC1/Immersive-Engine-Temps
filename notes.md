@@ -1,67 +1,86 @@
 ## This Document is just for my thoughts and not really relevant
 
 
-## Weitere Ideen
-- [ ] Temperature Persistence over game restart
+## Offen
+
+### Gauges / Anzeige
+- [x] Getrennte gauge temperatur bereiche
+- [x] Operating temperaturs nochmals überarbeiten
+- [ ] C/H-Buchstaben an den Bogen-Enden (2D)
+- [ ] UI Shows up delayed at start
+- [ ] 3D HUD Dials make full turn as startup animation
+- [ ] Make option available to enable 2d Hud only in 3rd person
+
+### Phase 3 – 3D-HUD
+- [ ] Helligkeits-Slider
+- [ ] Option: Nadel nach Temperatur einfärben
+
+### Engine Readiness (gehört zusammen)
+- [ ] Engine is warm if vehicle is called (erst recherchieren: lässt sich das Rufen erkennen?)
+- [ ] Weniger Leistung bei kaltem Motor (README Phase 3)
+
+
+### Simulation / Logik
+- [ ] Temperature Persistence over game restart (inkl. gelernte Max-RPM)
 - [ ] Cars with a gearbox that is always high reving, are likely to have higher Temperatures. I have to investigate that a little further
 - [ ] Optimising the unmounted logic
 - [ ] Optimising the ambient temperature logic
 - [ ] Maybe a clean up logic, that cleans up the vehicles that returned to ambient temperature
+
+### Settings
 - [ ] Implement mod config edit, maybe via Native Settings UI
+
+### Ideen (wäre cool)
+- [ ] Überhitzungs-Warnung (blinkender Text oder Symbol)
+- [ ] Folgen bei Überhitzung (weniger Leistung, Rauch)
+- [ ] Blaue Kaltlampe, solange der Motor nicht warm ist
+
+## Erledigt
+
+### Features
 - [x] Timeskip detection
 - [x] Implement HUD config edit
-- [ ] UI Shows up delayed at start
-- [ ] 3D HUD Dials make full turn as startup animation
-- [ ] Make option available to enable 2d Hud only in 3rd person
 - [x] Max RPM beim ersten Auto-Eintrag aus der TweakDB lesen (lernt danach weiter)
-## Phase 3 – 3D-HUD (aktuell)
+
+### Phase 3 – 3D-HUD
 - [x] Eigener 3D-Atlas mit Gauge-Texturen
 - [x] Platzhalter-Ziffernblatt im 3D durch eigene Gauge ersetzen
-- [ ] Helligkeits-Slider (Multiplikator auf ink-Farben, Basis EmissiveEV)
 - [x] Nadel drehen
-- [ ] Option: Nadel nach Temperatur einfärben
 - [x] Pitch 90 als Default in config (Plane liegt flach)
-- [ ] Operating temperaturs nochmals überarbeiten
 
-
-## Cleanup / Optimierung 
-
-### Lua
+### Cleanup / Optimierung
+#### Lua
 - [x] `S.import` wird nicht mehr genutzt (Presets ersetzen es) → entfernen
 - [x] `dirty` ist gemeinsam für Sim- und HUD-Tab → pro Tab trennen
 - [x] "Save To this Car" setzt dirty zurück, obwohl HUD-Änderungen nicht gespeichert werden
 - [x] `DEBUG.engineReadyness` fehlt in der DEBUG-Starttabelle
 - [x] Funktionsname `loadVehicleValues` → `loadSimValues` (lädt auch Presets)
 - [x] Scale parameter genauer machen, ist sehr nervig mit den grossen schritten
+- [x] Division durch 0 bei der RPM-Normierung abgesichert (`math.max`)
 
-### Redscript 2D
-- [x] Fest verdrahtete Werte in Config auslagern: 8000 RPM, Temp-Bereich 20–120, segCount 16
-- [x] `ColorForTemp`-Schwellen (100 / 115) konfigurierbar machen
+#### Redscript 2D
+- [x] Fest verdrahtete Werte in Felder ausgelagert: 8000 RPM, Temp-Bereich 20–120, segCount 16
+- [x] `ColorForTemp`-Schwellen (100 / 115) als Felder
 - [x] EngineTempSystem aus 2DHUD.reds in eigene System.reds verschieben
 
-### Redscript 3D
-- [x] Diagnose-Logs (`ResourceExists`, "NOT FOUND") nach dem Test entfernen oder leiser machen
-- [x] Stage-Logs in `TryBuildGauge` leiser machen oder hinter Debug-Schalter
+#### Redscript 3D
+- [x] Diagnose-Logs (`ResourceExists`, "NOT FOUND") entfernt
+- [x] Stage-Logs hinter Debug-Schalter (`debugLog`)
 - [x] `placementDirty` entfernen (wird nicht mehr gelesen)
 - [x] Feld `gauge` nach oben zu den anderen Feldern
 - [x] `visualScale` in `OnHostAssemble` entfernen (wird von `ApplyPlacement` überschrieben)
 
-### Assets (WolvenKit)
-- [ ] `parameters[1]` in `iet_plate.mesh` prüfen
+#### Assets (WolvenKit)
+- [x] `parameters[1]` in `iet_plate.mesh` prüfen
 
-### Repo
+#### Repo
 - [x] README: Codeware als Abhängigkeit eintragen
 
 
-
-### Nicht gemacht
-- ~~Engine is warm if vehicle is called - I think its not rlly possible for me, i have to get more knoledge over the vehicle system.~~
+## Nicht gemacht
 - [ ] ~~Ambient temperature should influence cooling (its minimal but i thik its a nice detail)~~ (keinen Bock)
-- [ ] ~~Implement in 2d hud that it dissapears when in wheapon wheel ~~ (hab keinen Bock)
+- [ ] ~~Implement in 2d hud that it dissapears when in wheapon wheel~~ (hab keinen Bock)
 - [ ] ~~Zeilenenden vereinheitlichen (`.gitattributes`)~~ (nicht nötig)
-
-
-
 **Konstanten**
 ```
 Leerlauf_RPM = 850
